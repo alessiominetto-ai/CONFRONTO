@@ -24,7 +24,7 @@ app.innerHTML=`<header><div class="switch" role="group" aria-label="Modalità di
 <footer class="foot">
 <img class="logo" src="logo-bianco.png" alt="Alessio Minetto" width="38" height="38">
 <div class="cols">
-<div><b>ingegnere Alessio Minetto</b><span>Via Provinciale Ovada 51, Tagliolo Monferrato (AL)</span></div>
+<div><b>Alessio Minetto</b><span>Via Provinciale Ovada 51, Tagliolo Monferrato (AL)</span></div>
 <div><b>P.IVA 02600730069</b><span>C.F. MNTLSS92C28G197L</span></div>
 <div><b>Ordine Ingegneri di Alessandria n° A-2314</b><a href="mailto:alessio.minetto@gmail.com">alessio.minetto@gmail.com</a></div>
 </div>
