@@ -1,6 +1,7 @@
 (function(){
 var items=[];
-try{items=JSON.parse(document.getElementById('data').textContent).items||[];}catch(_){}
+try{items=(window.CONFRONTI&&window.CONFRONTI.items)||[];}catch(_){}
+var BASE=items.map(function(i){return i.id+':'+(i.before||'').length+':'+(i.after||'').length+':'+(i.abstract||'').length+':'+(i.title||'');}).join('|');
 var app=document.getElementById('app');
 app.innerHTML=`<header><div class="switch" role="group" aria-label="Modalità di visualizzazione">
 <button class="lbl" id="lblOver" aria-pressed="true" type="button">Sovrapposte</button>
@@ -24,9 +25,7 @@ var $=function(s){return app.querySelector(s);};
 var stage=$('#stage'),handle=$('#handle'),track=$('#track'),lo=$('#lblOver'),ls=$('#lblSplit'),
     imgA=$('#imgA'),imgB=$('#imgB'),absT=$('#absText'),abs=$('#abs'),absBox=$('#absBox'),
     tabs=$('#tabs'),frame=$('#frame'),none=$('#none');
-var dbP=Promise.resolve(null);
-var queue=[],ready=false,isEd=false,uid=null,dbNS=null;
-var pos=50,py=50,split=false,timer,drag=false,both=false,cur=0,canEdit=false,dirty=false,busy=false,artifactNS=null,studio=null;
+var pos=50,py=50,split=false,timer,drag=false,both=false,cur=0,canEdit=!!window.ADMIN,dirty=false,busy=false,artifactNS=null,studio=null;
 
 /* ---- confronto ---- */
 function setPos(p){pos=Math.max(0,Math.min(100,p));stage.style.setProperty('--pos',pos+'%');handle.setAttribute('aria-valuenow',Math.round(pos));}
@@ -76,33 +75,7 @@ function renderTabs(){
     
   });
 }
-function flush(){if(!ready||isEd||!dbNS)return;while(queue.length){var e=queue.shift();e.u=uid;try{dbNS.collection('events').add(e).catch(function(){});}catch(_){}}}
-function track(k,id){queue.push({k:k,i:id||'',t:Date.now()});flush();}
-function morphTo(i){cur=i;show();var it=vis()[cur];if(it)track('view',it.id);}
-function loadStats(){
-  if(!studio)return;
-  var box=$s('#stats');box.textContent='Carico le statistiche…';
-  dbP.then(function(db){
-    if(!db){box.textContent='Statistiche non disponibili.';return;}
-    return db.collection('events').get().then(function(qs){
-      var opens=0,views={},users={};
-      qs.docs.forEach(function(s){var e=s.data()||{};if(e.u)users[e.u]=1;if(e.k==='open')opens++;else if(e.k==='view'&&e.i)views[e.i]=(views[e.i]||0)+1;});
-      var rows=items.map(function(it,i){return{label:it.title||String(i+1),n:views[it.id]||0};});
-      var counts=rows.map(function(r){return r.n;}),max=Math.max.apply(null,counts.concat([1])),top=Math.max.apply(null,counts.concat([0]));
-      box.innerHTML='';
-      var k=document.createElement('div');k.className='kpis';
-      k.innerHTML='<div><b>'+opens+'</b><span>accessi alla web app</span></div><div><b>'+Object.keys(users).length+'</b><span>visitatori diversi</span></div>';
-      box.appendChild(k);
-      rows.forEach(function(r){
-        var line=document.createElement('div'),isTop=top>0&&r.n===top;line.className='bar'+(isTop?' top':'');
-        var l=document.createElement('span');l.className='bl';l.textContent=r.label;
-        var t=document.createElement('span');t.className='bt';var f=document.createElement('i');f.style.width=(r.n/max*100)+'%';t.appendChild(f);
-        var n=document.createElement('span');n.className='bn';n.textContent=r.n+(isTop?' · più osservata':'');
-        line.appendChild(l);line.appendChild(t);line.appendChild(n);box.appendChild(line);
-      });
-    });
-  }).catch(function(){box.textContent='Impossibile leggere le statistiche.';});
-}
+function morphTo(i){cur=i;show();}
 function setAr(it){var a=it.ar||.75;frame.style.setProperty('--ar',a);frame.setAttribute('data-o',a<=1?'l':'p');}
 function show(){
   var v=vis();if(cur>=v.length)cur=Math.max(0,v.length-1);
@@ -126,7 +99,7 @@ function idb(){return new Promise(function(res,rej){var r=indexedDB.open('confro
 function dget(){return idb().then(function(d){return new Promise(function(res){var q=d.transaction('kv').objectStore('kv').get('draft');q.onsuccess=function(){res(q.result||null);};q.onerror=function(){res(null);};});}).catch(function(){return null;});}
 function dput(v){return idb().then(function(d){var t=d.transaction('kv','readwrite');if(v===null)t.objectStore('kv').delete('draft');else t.objectStore('kv').put(v,'draft');}).catch(function(){});}
 var st;
-function markDirty(){dirty=true;updateStudio();clearTimeout(st);st=setTimeout(function(){dput({items:items});},500);}
+function markDirty(){dirty=true;updateStudio();clearTimeout(st);st=setTimeout(function(){dput({items:items,base:BASE});},500);}
 function updateStudio(){
   if(!studio)return;
   var it=vis()[cur];
@@ -135,7 +108,7 @@ function updateStudio(){
   $s('#upA').disabled=$s('#upB').disabled=$s('#del').disabled=$s('#ttl').disabled=!it;
   if(it&&document.activeElement!==$s('#ttl'))$s('#ttl').value=it.title||'';
   $s('#pub').disabled=!dirty||busy;
-  if(dirty&&!busy&&!$s('#stat').textContent)say('Modifiche non ancora pubblicate');
+  if(dirty&&!busy&&!$s('#stat').textContent)say('Modifiche non ancora scaricate');
 }
 function prep(file){
   return createImageBitmap(file).then(function(b){
@@ -160,12 +133,11 @@ function applyMode(){
 }
 function buildStudio(){
   studio=document.createElement('section');studio.className='studio';
-  studio.innerHTML=`<p class="hint">Area di modifica, visibile solo a te. Chi apre il link vede soltanto immagini e descrizioni.</p>
+  studio.innerHTML=`<p class="hint">Area sviluppatore. Le modifiche restano su questo dispositivo finché non scarichi data.js e lo carichi su GitHub al posto del file esistente.</p>
 <input class="field" id="ttl" maxlength="60" placeholder="Titolo del confronto (facoltativo)" aria-label="Titolo del confronto">
 <div class="row"><button class="btn" id="upA" type="button"></button><button class="btn" id="upB" type="button"></button></div>
 <div class="row"><button class="btn" id="add" type="button">Nuovo confronto</button><button class="btn" id="del" type="button">Elimina questo confronto</button></div>
-<div class="row"><button class="btn primary" id="pub" type="button" disabled>Pubblica modifiche</button><span class="stat" id="stat" role="status"></span></div>
-<div class="stats"><div class="srow"><h2>Statistiche</h2><button class="btn" id="stRef" type="button">Aggiorna</button></div><div id="stats" role="status"></div><p class="hint">Conta solo le persone che aprono la pagina da Claude con permesso di collaboratore. I visitatori con sola visualizzazione o senza account non vengono conteggiati. Le tue visite non vengono contate.</p></div>
+<div class="row"><button class="btn primary" id="pub" type="button" disabled>Scarica data.js</button><span class="stat" id="stat" role="status"></span></div>
 <input type="file" id="file" accept="image/*" hidden>`;
   $('#studioHost').appendChild(studio);
   var target=null,file=$s('#file');
@@ -185,28 +157,25 @@ function buildStudio(){
     disarm();var it=vis()[cur];if(!it)return;
     items.splice(items.indexOf(it),1);cur=Math.max(0,cur-1);say('');markDirty();show();
   };
-  $s('#pub').onclick=publish;$s('#stRef').onclick=loadStats;loadStats();
+  $s('#pub').onclick=publish;
   updateStudio();
 }
 function publish(){
-  if(!artifactNS||busy)return;
-  var clone=document.documentElement.cloneNode(true);
-  clone.querySelector('#app').innerHTML='';
-  clone.querySelector('#data').textContent=JSON.stringify({items:items}).replace(/</g,'\\u003c');
-  clone.querySelectorAll('script[src]').forEach(function(n){n.remove();});
-  var html='<!DOCTYPE html>\n'+clone.outerHTML;
-  if(html.length>15000000){say('La pagina è troppo pesante: riduci il numero di immagini.');return;}
-  busy=true;dput(null);say('Pubblicazione in corso…');updateStudio();
-  artifactNS.publish(html).then(function(){dirty=false;busy=false;say('Pubblicato');updateStudio();})
-  .catch(function(e){
-    busy=false;dput({items:items});
-    var c=e&&e.code;
-    say(c==='conflict'?'Nel frattempo è stata pubblicata un’altra versione: la pagina si aggiorna.':
-        (c==='not_writer'||c==='not_granted')?'Non hai i permessi per pubblicare.':'Pubblicazione non riuscita. Riprova.');
-    updateStudio();
-  });
+  if(busy)return;
+  var src='window.CONFRONTI='+JSON.stringify({items:items}).replace(/</g,'\\u003c')+';\n';
+  var url=URL.createObjectURL(new Blob([src],{type:'text/javascript'}));
+  var a=document.createElement('a');a.href=url;a.download='data.js';
+  document.body.appendChild(a);a.click();a.remove();
+  setTimeout(function(){URL.revokeObjectURL(url);},4000);
+  dirty=false;say('data.js scaricato: caricalo su GitHub al posto del file esistente.');updateStudio();
 }
 
 setPos(50);setPy(50);show();
-
+if(canEdit){
+  dget().then(function(d){
+    if(d&&d.items&&d.items.length&&d.base===BASE){items=d.items;dirty=true;}
+    buildStudio();buildBar();
+    if(dirty)say('Bozza ripristinata, non ancora scaricata');
+  });
+}
 })();
