@@ -76,14 +76,62 @@ function vis(){return ed()?items:items.filter(function(i){return i.before&&i.aft
 function grow(){abs.style.height='auto';abs.style.height=abs.scrollHeight+'px';}
 function setImg(el,src){if(src)el.src=src;else el.removeAttribute('src');}
 function renderTabs(){
-  var v=vis();tabs.hidden=v.length<2;while(tabs.children.length>v.length)tabs.removeChild(tabs.lastChild);
+  var v=vis();tabs.hidden=v.length<2;tabs.classList.toggle('edit',ed()&&v.length>1);while(tabs.children.length>v.length)tabs.removeChild(tabs.lastChild);
   v.forEach(function(x,i){
-    var b=tabs.children[i];if(!b){b=document.createElement('button');b.type='button';b.className='tab';b.onclick=function(){var k=Array.prototype.indexOf.call(tabs.children,b);if(k!==cur)morphTo(k);};tabs.appendChild(b);}
+    var b=tabs.children[i];if(!b){b=document.createElement('button');b.type='button';b.className='tab';b.onclick=function(){if(noClick)return;var k=tabIndex(b);if(k!==cur)morphTo(k);};b.onkeydown=function(e){if(ed()&&e.shiftKey&&(e.key==='ArrowLeft'||e.key==='ArrowRight')){var k=tabIndex(b);moveItem(k,k+(e.key==='ArrowLeft'?-1:1));if(tabs.children[cur])tabs.children[cur].focus();e.preventDefault();}};tabs.appendChild(b);}
     b.textContent=String(i+1);b.setAttribute('aria-current',String(i===cur));
     
   });
 }
 function morphTo(i){cur=i;show();try{history.replaceState(null,'','#'+(i+1));}catch(_){}}
+var dragS=null,noClick=false;
+function moveItem(from,to){
+  if(from===to||to<0||to>=items.length)return;
+  var it=items.splice(from,1)[0];items.splice(to,0,it);
+  cur=to;markDirty();show();
+  try{history.replaceState(null,'','#'+(cur+1));}catch(_){}
+}
+function tabIndex(b){return Array.prototype.indexOf.call(tabs.children,b);}
+tabs.addEventListener('pointerdown',function(e){
+  if(!ed())return;
+  var b=e.target.closest('.tab');if(!b)return;
+  dragS={b:b,i:tabIndex(b),x:e.clientX,y:e.clientY,on:false,id:e.pointerId,rects:null,to:tabIndex(b),mark:null};
+});
+tabs.addEventListener('pointermove',function(e){
+  var s=dragS;if(!s||e.pointerId!==s.id)return;
+  var dx=e.clientX-s.x,dy=e.clientY-s.y;
+  if(!s.on){
+    if(Math.abs(dx)+Math.abs(dy)<8)return;
+    s.on=true;try{tabs.setPointerCapture(e.pointerId);}catch(_){}
+    s.b.classList.add('drag');
+    var tr=tabs.getBoundingClientRect();
+    s.rects=Array.prototype.map.call(tabs.children,function(c){
+      var r=c.getBoundingClientRect();
+      return {l:r.left-tr.left,r:r.right-tr.left,t:r.top-tr.top,b:r.bottom-tr.top,cx:(r.left+r.right)/2,cy:(r.top+r.bottom)/2};
+    });
+    s.mark=document.createElement('div');s.mark.className='dropmark';tabs.appendChild(s.mark);
+  }
+  s.b.style.transform='translate('+dx+'px,'+dy+'px)';
+  var best=0,bd=1e9;
+  s.rects.forEach(function(r,k){var d=Math.hypot(e.clientX-r.cx,e.clientY-r.cy);if(d<bd){bd=d;best=k;}});
+  var r=s.rects[best],after=e.clientX>r.cx,slot=best+(after?1:0);
+  s.to=slot>s.i?slot-1:slot;
+  s.mark.style.left=((after?r.r+13:r.l-13)-1)+'px';
+  s.mark.style.top=(r.t+6)+'px';s.mark.style.height=Math.max(r.b-r.t-12,8)+'px';
+});
+function endDrag(e){
+  var s=dragS;if(!s||e.pointerId!==s.id)return;
+  dragS=null;
+  if(!s.on)return;
+  noClick=true;setTimeout(function(){noClick=false;},60);
+  s.b.style.transition='none';s.b.style.transform='';s.b.classList.remove('drag');
+  requestAnimationFrame(function(){s.b.style.transition='';});
+  if(s.mark)s.mark.remove();
+  try{tabs.releasePointerCapture(e.pointerId);}catch(_){}
+  if(e.type==='pointerup')moveItem(s.i,s.to);
+}
+tabs.addEventListener('pointerup',endDrag);
+tabs.addEventListener('pointercancel',endDrag);
 function setAr(it){var a=it.ar||.75;frame.style.setProperty('--ar',a);frame.setAttribute('data-o',a<=1?'l':'p');}
 function show(){
   var v=vis();if(cur>=v.length)cur=Math.max(0,v.length-1);
@@ -142,7 +190,7 @@ function applyMode(){
 }
 function buildStudio(){
   studio=document.createElement('section');studio.className='studio';
-  studio.innerHTML=`<p class="hint">Area sviluppatore. Le modifiche restano su questo dispositivo finché non scarichi l’aggiornamento e lo carichi su GitHub.</p>
+  studio.innerHTML=`<p class="hint">Area sviluppatore. Per cambiare l’ordine dei confronti trascina i numeri in alto (da tastiera: Maiusc con le frecce). Le modifiche restano su questo dispositivo finché non scarichi l’aggiornamento e lo carichi su GitHub.</p>
 <input class="field" id="ttl" maxlength="60" placeholder="Titolo del confronto (facoltativo)" aria-label="Titolo del confronto">
 <p class="hint" id="lnk"></p>
 <div class="row"><button class="btn" id="upA" type="button"></button><button class="btn" id="upB" type="button"></button></div>
