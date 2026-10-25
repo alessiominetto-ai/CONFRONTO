@@ -218,26 +218,6 @@ function buildStudio(){
   $s('#pub').onclick=publish;
   updateStudio();
 }
-/*zip*/
-function crc32(u8){var t=crc32.t,c,n,k,i;if(!t){t=crc32.t=[];for(n=0;n<256;n++){c=n;for(k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;t[n]=c>>>0;}}var crc=-1;for(i=0;i<u8.length;i++)crc=t[(crc^u8[i])&255]^(crc>>>8);return(crc^-1)>>>0;}
-function makeZip(files){
-  var enc=new TextEncoder(),parts=[],cd=[],off=0,csz=0;
-  files.forEach(function(f){
-    var nm=enc.encode(f.name),crc=crc32(f.data),sz=f.data.length;
-    var h=new DataView(new ArrayBuffer(30));
-    h.setUint32(0,0x04034b50,true);h.setUint16(4,20,true);h.setUint16(6,0x0800,true);h.setUint16(8,0,true);h.setUint16(10,0,true);h.setUint16(12,0x21,true);
-    h.setUint32(14,crc,true);h.setUint32(18,sz,true);h.setUint32(22,sz,true);h.setUint16(26,nm.length,true);h.setUint16(28,0,true);
-    parts.push(h.buffer,nm,f.data);
-    var c=new DataView(new ArrayBuffer(46));
-    c.setUint32(0,0x02014b50,true);c.setUint16(4,20,true);c.setUint16(6,20,true);c.setUint16(8,0x0800,true);c.setUint16(10,0,true);c.setUint16(12,0,true);c.setUint16(14,0x21,true);
-    c.setUint32(16,crc,true);c.setUint32(20,sz,true);c.setUint32(24,sz,true);c.setUint16(28,nm.length,true);c.setUint32(42,off,true);
-    cd.push(c.buffer,nm);csz+=46+nm.length;off+=30+nm.length+sz;
-  });
-  var e=new DataView(new ArrayBuffer(22));
-  e.setUint32(0,0x06054b50,true);e.setUint16(8,files.length,true);e.setUint16(10,files.length,true);e.setUint32(12,csz,true);e.setUint32(16,off,true);
-  return new Blob(parts.concat(cd,[e.buffer]),{type:'application/zip'});
-}
-/*endzip*/
 function dataToU8(u){var b=atob(u.split(',')[1]),a=new Uint8Array(b.length),i;for(i=0;i<b.length;i++)a[i]=b.charCodeAt(i);return a;}
 function publish(){
   if(busy)return;
@@ -246,7 +226,7 @@ function publish(){
     var o={id:it.id,title:it.title||'',ar:it.ar,abstract:it.abstract||'',before:it.before,after:it.after};
     ['before','after'].forEach(function(k){
       if(/^data:/.test(o[k])){
-        var p='immagini/'+it.id+'-'+(k==='before'?'fatto':'progetto')+'-'+stamp+'.jpg';
+        var p='img-'+it.id+'-'+(k==='before'?'fatto':'progetto')+'-'+stamp+'.jpg';
         files.push({name:p,data:dataToU8(o[k])});o[k]=p;n++;
       }
     });
@@ -254,12 +234,16 @@ function publish(){
   });
   var js='window.CONFRONTI='+JSON.stringify({items:out}).replace(/</g,'\\u003c')+';\n';
   files.unshift({name:'data.js',data:new TextEncoder().encode(js)});
-  var url=URL.createObjectURL(makeZip(files));
-  var a=document.createElement('a');a.href=url;a.download='aggiornamento-sito.zip';
-  document.body.appendChild(a);a.click();a.remove();
-  setTimeout(function(){URL.revokeObjectURL(url);},4000);
+  files.forEach(function(f,i){
+    setTimeout(function(){
+      var url=URL.createObjectURL(new Blob([f.data],{type:/\.js$/.test(f.name)?'text/javascript':'image/jpeg'}));
+      var a=document.createElement('a');a.href=url;a.download=f.name;
+      document.body.appendChild(a);a.click();a.remove();
+      setTimeout(function(){URL.revokeObjectURL(url);},4000);
+    },i*500);
+  });
   dirty=false;
-  say('Scaricato: estrai lo zip e carica su GitHub data.js e la cartella immagini ('+n+' nuove immagini).');
+  say('Sto scaricando '+files.length+' file: se il browser lo chiede, consenti i download multipli. Poi caricali tutti insieme nella cartella principale del repository su GitHub.');
   updateStudio();
 }
 function fromHash(){var m=/^#(\d+)$/.exec(location.hash);if(m)cur=Math.max(0,parseInt(m[1],10)-1);}
