@@ -78,12 +78,12 @@ main{flex:1;padding-bottom:70px}
 .frame.home:not(.split) .pane.before{left:calc((100cqw - var(--ow))/2);width:calc(var(--p)*var(--ow) - 3px)}
 .frame.home:not(.split) .pane.after{left:calc((100cqw - var(--ow))/2 + var(--p)*var(--ow) + 3px);width:calc((1 - var(--p))*var(--ow) - 3px)}
 .pat{position:absolute;inset:0;overflow:hidden;pointer-events:none}
-.rot{position:absolute;left:50%;top:50%;width:300%;letter-spacing:.04em;text-align:center;font-size:3.2cqw;transform:translate(-50%,-50%) rotate(0deg)}
+.rot{position:absolute;left:50%;top:50%;width:300%;letter-spacing:.04em;font-size:2.8cqw;transform:translate(-50%,-50%) rotate(0deg)}
 #rotA{color:#fff}
 #rotB{color:var(--c)}
-.frame:not(.split) #rotA{font-size:2.3cqw;transform:translate(-50%,-50%) rotate(-35deg)}
-.frame:not(.split) #rotB{font-size:3.3cqw;transform:translate(-50%,-50%) rotate(40deg)}
-.rot .row{white-space:nowrap;line-height:1.12}
+.frame:not(.split) .rot{transform:translate(-50%,-50%) rotate(-45deg)}
+.rot .row{display:flex;justify-content:center;white-space:nowrap;line-height:1.12}
+.rot .row>*{flex:none}
 .rot .w{font-weight:300;opacity:1}
 .rot b{font-weight:800}
 .frame.split .rot .w{opacity:0}
@@ -112,7 +112,7 @@ main{flex:1;padding-bottom:70px}
 .frame.morph .pane{transition:left .9s var(--ease),top .9s var(--ease),width .9s var(--ease),height .9s var(--ease),clip-path .9s var(--ease)}
 .frame.morph .cap{transition:top .9s var(--ease),width .9s var(--ease)}
 .frame.morph .under{transition:height .9s var(--ease)}
-.frame.morph .rot{transition:font-size .9s var(--ease),transform .9s var(--ease)}
+.frame.morph .rot{transition:transform .9s var(--ease)}
 .frame.morph .rot .w{transition:opacity .9s var(--ease)}
 
 /* numeri dei progetti */
