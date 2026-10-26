@@ -11,20 +11,20 @@ var mq=window.matchMedia('(max-width:640px)');
 var app=document.getElementById('app');
 
 /* ---------- struttura ---------- */
-function swHTML(cls){return '<div class="sw '+(cls||'')+'" role="group" aria-label="Modalità di visualizzazione"><button class="lbl" data-m="split" type="button" aria-pressed="true">Affiancate</button><button class="track" role="switch" aria-checked="false" aria-label="Sovrappone le immagini" type="button"></button><button class="lbl" data-m="over" type="button" aria-pressed="false">Sovrapposte</button></div>';}
+function swHTML(cls,demo){var t=demo?' tabindex="-1"':'';return '<div class="sw '+(cls||'')+'" role="group" aria-label="Modalità di visualizzazione"'+(demo?' aria-hidden="true"':'')+'><button class="lbl" data-m="split" type="button" aria-pressed="true"'+t+'>Affiancate</button><button class="track" role="switch" aria-checked="false" aria-label="Sovrappone le immagini" type="button"'+t+'></button><button class="lbl" data-m="over" type="button" aria-pressed="false"'+t+'>Sovrapposte</button></div>';}
 function sliderHTML(label,demo){return '<div class="slider"><i class="dot"></i><i class="dot r"></i><span class="ln"><b></b></span><button class="hd" type="button" role="slider" aria-label="'+label+'" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50"'+(demo?' tabindex="-1" aria-hidden="true"':'')+'></button></div>';}
 var PUB='<div class="row"><button class="btn primary pub" type="button" disabled>Scarica aggiornamento</button><span class="stat" role="status"></span></div>';
 app.innerHTML=
 '<header class="top"><a class="brand" href="#" aria-label="Home"><img src="logo-bianco.png" alt="Alessio Minetto" width="32" height="32"></a>'+
 '<nav class="nav" aria-label="Principale"><a href="#chi-sono" data-r="about"><span>Chi sono</span></a><a href="#progetti" data-r="work"><span>Progetti</span></a></nav>'+
 '<button class="burger" id="burger" type="button" aria-label="Apri il menu" aria-expanded="false"><i></i><i></i><i></i></button></header>'+
-'<div class="menu" id="menu" aria-hidden="true"><nav aria-label="Menu"><a href="#chi-sono" data-r="about">Chi sono</a><a href="#progetti" data-r="work">Progetti</a><a href="#contatti" class="ct">Contatti</a></nav>'+
-'<div class="contacts"><b>Alessio Minetto</b><a href="mailto:alessio.minetto@gmail.com">alessio.minetto@gmail.com</a><span>P.IVA 02600730069</span>'+
-'<small>Via Provinciale Ovada 51, Tagliolo Monferrato (AL)<br>C.F. MNTLSS92C28G197L<br>Ordine Ingegneri di Alessandria n° A-2314</small></div></div>'+
+'<div class="menu" id="menu" aria-hidden="true"><nav aria-label="Menu"><a href="#chi-sono">Chi sono</a><a href="#progetti">Progetti</a><a href="#contatti" class="ct" aria-current="true">Contatti</a></nav>'+
+'<div class="mc"><img src="logo-bianco.png" alt="" width="130" height="130"><b>Alessio Minetto</b><a href="mailto:alessio.minetto@gmail.com">alessio.minetto@gmail.com</a><span>P.IVA 02600730069</span>'+
+'<small>Via Provinciale Ovada 51, Tagliolo Monferrato (AL)<br>C.F. MNTLSS92C28G197L · Ordine Ingegneri di Alessandria n° A-2314</small></div></div>'+
 '<main>'+
-'<section class="page home" id="pHome" data-r="home"><h1 class="big">Foto<em>inserimenti</em></h1>'+swHTML()+
-'<div class="frame home split" id="fHome"><div class="cmp"><div class="pane before"><div class="pat"><div class="rot" id="rotA"></div></div><span class="lab">Prima</span></div>'+
-'<div class="pane after"><div class="pat"><div class="rot" id="rotB"></div></div><span class="lab">Dopo</span></div></div>'+
+'<section class="page home" id="pHome" data-r="home"><h1 class="big">Foto<em>inserimenti</em></h1>'+swHTML('home-sw',true)+
+'<div class="frame home split" id="fHome"><div class="cmp"><div class="pane before"><div class="pat"><div class="rot" id="rotA"></div></div></div>'+
+'<div class="pane after"><div class="pat"><div class="rot" id="rotB"></div></div></div></div>'+
 '<div class="under">'+sliderHTML('Cursore dimostrativo',true)+'</div></div></section>'+
 '<section class="page about" id="pAbout" data-r="about" hidden><div class="ab"><figure class="portrait"><img id="abImg" alt="" width="640" height="640"></figure>'+
 '<div class="abt"><h2 id="abName"></h2><p id="abText"></p></div></div></section>'+
@@ -41,19 +41,27 @@ function $(s,r){return (r||app).querySelector(s);}
 function $$(s,r){return Array.prototype.slice.call((r||app).querySelectorAll(s));}
 var frames={home:$('#fHome'),work:$('#fWork')};
 var imgA=$('#imgA'),imgB=$('#imgB'),cap=$('#cap'),capT=$('#capT'),capA=$('#capA'),nums=$('#nums'),none=$('#none');
-var split=true,page='home',cur=0,canEdit=ADMIN,preview=false,dirty=false,busy=false,studio=false,mt=0;
+var split=true,hsplit=true,page='home',cur=0,canEdit=ADMIN,preview=false,dirty=false,busy=false,studio=false,mt=0;
 var pos={home:40,work:50},cap1=0,cap2=0;
 function ed(){return canEdit&&!preview;}
 function vis(){return ed()?items:items.filter(function(i){return i.before&&i.after;});}
 
-/* trame della home */
-function fillPat(el,word,rows,reps){var h='',r;for(r=0;r<rows;r++)h+='<div class="row" style="margin-left:'+(r%2?'-2.2em':'0')+'">'+new Array(reps+1).join(word)+'</div>';el.innerHTML=h;}
-fillPat($('#rotA'),'PRIMA',24,18);fillPat($('#rotB'),'DOPO',24,18);
+/* trame della home: la parola extrabold è una delle ripetizioni, al centro del riquadro */
+function fillPat(el,word,rows,n){
+  var h='',mid=(rows-1)/2,r,off,c;
+  for(r=0;r<rows;r++){
+    off=Math.abs(r-mid);
+    if(off===0)h+='<div class="row"><span class="w">'+new Array(n+1).join(word)+'</span><b>'+word+'</b><span class="w">'+new Array(n+1).join(word)+'</span></div>';
+    else{c=2*n+1+(off%2?1:0);h+='<div class="row"><span class="w">'+new Array(c+1).join(word)+'</span></div>';}
+  }
+  el.innerHTML=h;
+}
+fillPat($('#rotA'),'PRIMA',27,9);fillPat($('#rotB'),'DOPO',27,9);
 
 /* ---------- cursore ---------- */
 function setPos(k,p){
   pos[k]=Math.max(0,Math.min(100,p));
-  frames[k].style.setProperty('--pos',pos[k]+'%');
+  frames[k].style.setProperty('--pos',pos[k]+'%');frames[k].style.setProperty('--p',String(pos[k]/100));
   var h=$('.hd',frames[k]);if(h)h.setAttribute('aria-valuenow',String(Math.round(pos[k])));
 }
 function bindDrag(el,k,rect){
@@ -78,16 +86,38 @@ $('.hd',frames.work).addEventListener('keydown',function(e){
   else if(e.key==='End'){setPos('work',100);e.preventDefault();}
 });
 
-/* movimento dimostrativo in home: il cursore si sposta da solo di poco e torna indietro */
-var raf=0,t0=0;
+/* home: dimostrazione automatica, coordinata con l'interruttore */
+var raf=0,t0=0,hT=0,hRun=false,hi=0;
+function setHome(v){
+  if(v===hsplit)return;
+  hsplit=v;
+  var f=frames.home,w=$('.home-sw');
+  f.classList.add('morph');f.classList.toggle('split',v);
+  $('.track',w).setAttribute('aria-checked',String(!v));
+  $$('.lbl',w).forEach(function(b){b.setAttribute('aria-pressed',String((b.getAttribute('data-m')==='split')===v));});
+  if(v)setPos('home',40);
+  setTimeout(function(){f.classList.remove('morph');},1000);
+}
 function homeTick(ts){
-  if(split||page!=='home'||reduce||document.hidden){raf=0;return;}
+  if(hsplit||!hRun){raf=0;return;}
   if(!t0)t0=ts;
-  setPos('home',40+7*(1-Math.cos((ts-t0)/1000*1.3))/2);
+  setPos('home',40+10*(1-Math.cos((ts-t0)/1000*1.75))/2);
   raf=requestAnimationFrame(homeTick);
 }
-function homeStart(){if(raf||split||page!=='home'||reduce||document.hidden)return;t0=0;raf=requestAnimationFrame(homeTick);}
-document.addEventListener('visibilitychange',homeStart);
+var HS=[
+  [2400,function(){setHome(false);}],
+  [1100,function(){t0=0;if(!raf)raf=requestAnimationFrame(homeTick);}],
+  [7200,function(){setHome(true);}],
+  [1800,function(){}]
+];
+function homeNext(){
+  if(!hRun)return;
+  var st=HS[hi];
+  hT=setTimeout(function(){if(!hRun)return;st[1]();hi=(hi+1)%HS.length;homeNext();},st[0]);
+}
+function homeStart(){if(hRun||page!=='home'||reduce||document.hidden)return;hRun=true;hi=0;setHome(true);homeNext();}
+function homeStop(){hRun=false;clearTimeout(hT);if(raf)cancelAnimationFrame(raf);raf=0;}
+document.addEventListener('visibilitychange',function(){if(document.hidden)homeStop();else homeStart();});
 
 /* ---------- interruttore ---------- */
 function applyUnder(){
@@ -98,18 +128,17 @@ function applyUnder(){
 function setMode(s){
   if(s===split)return;
   split=s;
-  [frames.home,frames.work].forEach(function(f){f.classList.add('morph');f.classList.toggle('split',s);});
-  $$('.sw').forEach(function(w){
+  frames.work.classList.add('morph');frames.work.classList.toggle('split',s);
+  $$('.sw:not(.home-sw)').forEach(function(w){
     $('.track',w).setAttribute('aria-checked',String(!s));
     $$('.lbl',w).forEach(function(b){b.setAttribute('aria-pressed',String((b.getAttribute('data-m')==='split')===s));});
   });
   $$('.hd').forEach(function(h){if(h.getAttribute('aria-hidden')!=='true')h.tabIndex=s?-1:0;});
-  if(s)setPos('home',40);
   applyUnder();
   clearTimeout(mt);
-  mt=setTimeout(function(){frames.home.classList.remove('morph');frames.work.classList.remove('morph');homeStart();},1000);
+  mt=setTimeout(function(){frames.work.classList.remove('morph');},1000);
 }
-$$('.sw').forEach(function(w){
+$$('.sw:not(.home-sw)').forEach(function(w){
   $('.track',w).addEventListener('click',function(){setMode(!split);});
   $$('.lbl',w).forEach(function(b){b.addEventListener('click',function(){setMode(b.getAttribute('data-m')==='split');});});
 });
@@ -216,7 +245,7 @@ function renderAbout(){
 var menu=$('#menu'),burger=$('#burger');
 function menuOpen(o){
   menu.classList.toggle('open',o);menu.setAttribute('aria-hidden',String(!o));
-  burger.setAttribute('aria-expanded',String(o));burger.setAttribute('aria-label',o?'Chiudi il menu':'Apri il menu');
+  burger.setAttribute('aria-expanded',String(o));$('.top').classList.toggle('mopen',o);burger.setAttribute('aria-label',o?'Chiudi il menu':'Apri il menu');
   document.body.style.overflow=o?'hidden':'';
 }
 burger.addEventListener('click',function(){
@@ -237,11 +266,11 @@ function route(){
   else if(h==='progetti')p='work';
   var changed=p!==page;page=p;
   $$('main .page').forEach(function(s){s.hidden=s.getAttribute('data-r')!==p;});
-  $$('.nav a,.menu nav a').forEach(function(a){if(a.getAttribute('data-r')===p)a.setAttribute('aria-current','page');else a.removeAttribute('aria-current');});
+  $$('.nav a').forEach(function(a){if(a.getAttribute('data-r')===p)a.setAttribute('aria-current','page');else a.removeAttribute('aria-current');});
   if(changed)window.scrollTo(0,0);
   if(p==='work')show();
   updateStudio();
-  if(p==='home')homeStart();
+  if(p==='home')homeStart();else homeStop();
 }
 window.addEventListener('hashchange',route);
 
