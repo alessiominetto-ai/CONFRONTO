@@ -2,169 +2,160 @@
 'use strict';
 var ADMIN=!!window.ADMIN,DATA=window.CONFRONTI||{};
 var items=(DATA.items||[]).map(function(x){return Object.assign({},x);});
-var DEF={name:'Alessio Minetto',text:'Ingegnere Edile-Architetto,\nlibero professionista,\nesperto in rappresentazione architettonica.',photo:'immagini/ritratto.jpg'};
+var DEF={name:'Alessio Minetto',text:'Ingegnere Edile-Architetto,\nlibero professionista,\nesperto in rappresentazione architettonica.',photo:'immagini/ritratto.jpg',email:'alessio.minetto@gmail.com',phone:'3475552247',piva:'02600730069',extra:''};
 var profile=Object.assign({},DEF,DATA.profile||{});
-function sig(){return items.map(function(i){return i.id+':'+(i.before||'').length+':'+(i.after||'').length+':'+(i.abstract||'').length+':'+(i.title||'');}).join('|')+'#'+profile.name+'|'+profile.text.length+'|'+(profile.photo||'').length;}
+function sig(){return items.map(function(i){return i.id+':'+(i.before||'').length+':'+(i.after||'').length+':'+(i.abstract||'').length+':'+(i.title||'');}).join('|')+'#'+['name','text','photo','email','phone','piva','extra'].map(function(k){return (profile[k]||'').length;}).join(',');}
 var BASE=sig();
+var LOGO='<svg viewBox="867.5 249.5 185.5 199.5" role="img" aria-label="Alessio Minetto"><path fill="currentColor" d="M 899.609375 420.089844 C 857.878906 420.089844 911.523438 258.539062 938.855469 387.671875 L 940.9375 397.46875 C 929.433594 411.738281 915.550781 420.089844 899.609375 420.089844 M 1010.015625 250.148438 L 979.101562 250.148438 C 979.101562 291.4375 972.632812 331.140625 960.699219 361.78125 L 937.054688 250.148438 L 909.742188 250.148438 C 909.742188 250.148438 827.1875 448.710938 894.09375 448.710938 C 914.265625 448.710938 931.550781 437.4375 945.539062 419.214844 L 951.792969 448.710938 L 979.101562 448.710938 L 965.410156 384.03125 C 977.574219 355.097656 984.847656 319.792969 986.542969 285.285156 L 1021.148438 448.710938 L 1052.0625 448.710938 Z M 1010.015625 250.148438"/></svg>';
 var reduce=!!(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches);
-var mq=window.matchMedia('(max-width:640px)');
 var app=document.getElementById('app');
 
 /* ---------- struttura ---------- */
-function swHTML(cls,demo){var t=demo?' tabindex="-1"':'';return '<div class="sw '+(cls||'')+'" role="group" aria-label="Modalità di visualizzazione"'+(demo?' aria-hidden="true"':'')+'><button class="lbl" data-m="split" type="button" aria-pressed="true"'+t+'>Affiancate</button><button class="track" role="switch" aria-checked="false" aria-label="Sovrappone le immagini" type="button"'+t+'></button><button class="lbl" data-m="over" type="button" aria-pressed="false"'+t+'>Sovrapposte</button></div>';}
-function sliderHTML(label,demo){return '<div class="slider"><i class="dot"></i><i class="dot r"></i><span class="ln"><b></b></span><button class="hd" type="button" role="slider" aria-label="'+label+'" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50"'+(demo?' tabindex="-1" aria-hidden="true"':'')+'></button></div>';}
-var PUB='<div class="row"><button class="btn primary pub" type="button" disabled>Scarica aggiornamento</button><span class="stat" role="status"></span></div>';
+var NAV=[['#immagini','work','Immagini',63],['#chi-sono','about','Chi sono',525],['#contatti','contacts','Contatti',989]];
+function navHTML(cls){return NAV.map(function(n,i){return '<a class="lk'+(cls?' '+cls[i]:'')+'" href="'+n[0]+'" data-r="'+n[1]+'" style="--t:'+n[3]+'">'+n[2]+'</a>';}).join('');}
+var SW='<div class="sw" role="group" aria-label="Modalità di visualizzazione"><button class="lbl" data-m="split" type="button" aria-pressed="true">Affiancate</button><button class="track" role="switch" aria-checked="false" aria-label="Sovrappone le immagini" type="button"></button><button class="lbl" data-m="over" type="button" aria-pressed="false">Sovrapposte</button></div>';
 app.innerHTML=
-'<header class="top"><a class="brand" href="#" aria-label="Home"><img src="logo-bianco.png" alt="Alessio Minetto" width="32" height="32"></a>'+
-'<nav class="nav" aria-label="Principale"><a href="#chi-sono" data-r="about"><span>Chi sono</span></a><a href="#progetti" data-r="work"><span>Progetti</span></a></nav>'+
-'<button class="burger" id="burger" type="button" aria-label="Apri il menu" aria-expanded="false"><i></i><i></i><i></i></button></header>'+
-'<div class="menu" id="menu" aria-hidden="true"><nav aria-label="Menu"><a href="#chi-sono">Chi sono</a><a href="#progetti">Progetti</a><a href="#contatti" class="ct" aria-current="true">Contatti</a></nav>'+
-'<div class="mc"><img src="logo-bianco.png" alt="" width="130" height="130"><b>Alessio Minetto</b><a href="mailto:alessio.minetto@gmail.com">alessio.minetto@gmail.com</a><span>P.IVA 02600730069</span>'+
-'<small>Via Provinciale Ovada 51, Tagliolo Monferrato (AL)<br>C.F. MNTLSS92C28G197L · Ordine Ingegneri di Alessandria n° A-2314</small></div></div>'+
-'<main>'+
-'<section class="page home" id="pHome" data-r="home"><h1 class="big">Foto<em>inserimenti</em></h1>'+swHTML('home-sw',true)+
-'<div class="frame home split" id="fHome"><div class="cmp"><div class="pane before"><div class="pat"><div class="rot" id="rotA"></div></div></div>'+
-'<div class="pane after"><div class="pat"><div class="rot" id="rotB"></div></div></div></div>'+
-'<div class="under">'+sliderHTML('Cursore dimostrativo',true)+'</div></div></section>'+
-'<section class="page about" id="pAbout" data-r="about" hidden><div class="ab"><figure class="portrait"><img id="abImg" alt="" width="640" height="640"></figure>'+
-'<div class="abt"><h2 id="abName"></h2><p id="abText"></p></div></div></section>'+
-'<section class="page work" id="pWork" data-r="work" hidden>'+swHTML('work-sw')+
-'<div class="frame work split" id="fWork"><div class="cmp" id="cWork"><div class="pane before"><img id="imgA" alt="Stato di fatto" decoding="async" fetchpriority="high"></div>'+
+'<div class="wrap"><div class="board" id="board" data-page="home">'+
+'<a class="slogo" href="#" aria-label="Home">'+LOGO+'</a>'+
+'<nav class="vnav" aria-label="Principale">'+navHTML()+'</nav>'+
+'<section class="page" id="pHome" data-r="home"><div class="blogo">'+LOGO+'</div><h1 class="big">Foto<em>inserimenti</em></h1><hr class="hline">'+
+'<nav class="hl" aria-label="Sezioni">'+navHTML(['l','c','r'])+'</nav></section>'+
+'<section class="page split" id="pWork" data-r="work" hidden>'+SW+
+'<div class="stage" id="stage"><div class="pane before"><img id="imgA" alt="Stato di fatto" decoding="async" fetchpriority="high"></div>'+
 '<div class="pane after"><img id="imgB" alt="Stato di progetto" decoding="async" fetchpriority="high"></div></div>'+
 '<div class="cap" id="cap"><b id="capT"></b><span id="capA"></span></div>'+
-'<div class="under">'+sliderHTML('Cursore di confronto',false)+'</div></div>'+
-'<p class="none" id="none" hidden>Nessun progetto disponibile.</p>'+
-'<nav class="nums" id="nums" aria-label="Progetti" hidden></nav></section>'+
-'</main>';
+'<div class="slider"><i class="dot"></i><i class="dot r"></i><span class="ln"><b></b></span><button class="hd" type="button" role="slider" aria-label="Cursore di confronto" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50" tabindex="-1"></button></div>'+
+'<p class="none" id="none" hidden>Nessuna immagine disponibile.</p>'+
+'<nav class="nums" id="nums" aria-label="Immagini" hidden></nav></section>'+
+'<section class="page" id="pAbout" data-r="about" hidden><div class="por"><img id="abImg" alt="" width="640" height="640"></div>'+
+'<div class="abt"><h2 id="abName"></h2><p id="abText"></p></div></section>'+
+'<section class="page" id="pContacts" data-r="contacts" hidden><div class="blogo">'+LOGO+'</div>'+
+'<a class="ct c1" id="ctMail" href="#"></a><a class="ct c2" id="ctTel" href="#"></a><span class="ct c3" id="ctIva"></span><div class="ct c4" id="ctExtra"></div></section>'+
+'</div></div><div class="studios" id="studios"></div>';
 
 function $(s,r){return (r||app).querySelector(s);}
 function $$(s,r){return Array.prototype.slice.call((r||app).querySelectorAll(s));}
-var frames={home:$('#fHome'),work:$('#fWork')};
-var imgA=$('#imgA'),imgB=$('#imgB'),cap=$('#cap'),capT=$('#capT'),capA=$('#capA'),nums=$('#nums'),none=$('#none');
-var split=true,hsplit=true,page='home',cur=0,canEdit=ADMIN,preview=false,dirty=false,busy=false,studio=false,mt=0;
-var pos={home:40,work:50},cap1=0,cap2=0;
+var board=$('#board'),pWork=$('#pWork'),imgA=$('#imgA'),imgB=$('#imgB'),cap=$('#cap'),capT=$('#capT'),capA=$('#capA'),nums=$('#nums'),none=$('#none');
+var lastShown=null,split=true,page='home',cur=0,canEdit=ADMIN,preview=false,dirty=false,busy=false,studio=false,mt=0,pos=50;
 function ed(){return canEdit&&!preview;}
 function vis(){return ed()?items:items.filter(function(i){return i.before&&i.after;});}
 
-/* trame della home: la parola extrabold è una delle ripetizioni, al centro del riquadro */
-function fillPat(el,word,rows,n){
-  var h='',mid=(rows-1)/2,r,off,c;
-  for(r=0;r<rows;r++){
-    off=Math.abs(r-mid);
-    if(off===0)h+='<div class="row"><span class="w">'+new Array(n+1).join(word)+'</span><b>'+word+'</b><span class="w">'+new Array(n+1).join(word)+'</span></div>';
-    else{c=2*n+1+(off%2?1:0);h+='<div class="row"><span class="w">'+new Array(c+1).join(word)+'</span></div>';}
-  }
-  el.innerHTML=h;
-}
-fillPat($('#rotA'),'PRIMA',27,9);fillPat($('#rotB'),'DOPO',27,9);
-
 /* ---------- cursore ---------- */
-function setPos(k,p){
-  pos[k]=Math.max(0,Math.min(100,p));
-  frames[k].style.setProperty('--pos',pos[k]+'%');frames[k].style.setProperty('--p',String(pos[k]/100));
-  var h=$('.hd',frames[k]);if(h)h.setAttribute('aria-valuenow',String(Math.round(pos[k])));
+function setPos(p){
+  pos=Math.max(0,Math.min(100,p));
+  pWork.style.setProperty('--pos',pos+'%');
+  $('.hd',pWork).setAttribute('aria-valuenow',String(Math.round(pos)));
 }
-function bindDrag(el,k,rect){
+function bindDrag(el,rect){
   var d=false;
-  function mv(e){var r=rect();if(r.width)setPos(k,(e.clientX-r.left)/r.width*100);}
+  function mv(e){var r=rect();if(r.width)setPos((e.clientX-r.left)/r.width*100);}
   el.addEventListener('pointerdown',function(e){
     if(split)return;
-    d=true;frames[k].classList.remove('morph');
+    d=true;pWork.classList.remove('morph');
     try{el.setPointerCapture(e.pointerId);}catch(_){}
     mv(e);
   });
   el.addEventListener('pointermove',function(e){if(d)mv(e);});
   ['pointerup','pointercancel'].forEach(function(n){el.addEventListener(n,function(){d=false;});});
 }
-bindDrag($('#cWork'),'work',function(){return $('.pane.before',frames.work).getBoundingClientRect();});
-bindDrag($('.slider',frames.work),'work',function(){return $('.slider',frames.work).getBoundingClientRect();});
-$('.hd',frames.work).addEventListener('keydown',function(e){
+
+/* zoom con due dita (o Ctrl + rotella), trascinamento dell'immagine ingrandita, doppio tocco per ingrandire o ripristinare */
+var stageEl=$('#stage'),Z={s:1,x:0,y:0},ptr={},pinch=null,divDrag=false,lastTap=0,tapX=0,tapY=0,moved=0;
+function refRect(cx,cy){
+  var a=$('.pane.before',pWork).getBoundingClientRect(),b=$('.pane.after',pWork).getBoundingClientRect();
+  return (split&&cx>=b.left&&cx<=b.right&&cy>=b.top&&cy<=b.bottom)?b:a;
+}
+function clampZ(r){Z.x=Math.min(0,Math.max(r.width*(1-Z.s),Z.x));Z.y=Math.min(0,Math.max(r.height*(1-Z.s),Z.y));}
+function applyZ(){
+  var t=Z.s>1.001?'translate('+Z.x+'px,'+Z.y+'px) scale('+Z.s+')':'';
+  imgA.style.transform=t;imgB.style.transform=t;
+  stageEl.classList.toggle('zoomed',Z.s>1.001);
+}
+function zoomAt(ns,cx,cy){
+  var r=refRect(cx,cy);ns=Math.max(1,Math.min(6,ns));
+  var fx=cx-r.left,fy=cy-r.top,k=ns/Z.s;
+  Z.x=fx-(fx-Z.x)*k;Z.y=fy-(fy-Z.y)*k;Z.s=ns;
+  if(Z.s<=1.001){Z.s=1;Z.x=0;Z.y=0;}else clampZ(r);
+  applyZ();
+}
+function resetZ(){Z.s=1;Z.x=0;Z.y=0;applyZ();}
+function divTo(e){var r=$('.pane.before',pWork).getBoundingClientRect();if(r.width)setPos((e.clientX-r.left)/r.width*100);}
+function midOf(){var ids=Object.keys(ptr),a=ptr[ids[0]],b=ptr[ids[1]];return {x:(a.x+b.x)/2,y:(a.y+b.y)/2,d:Math.hypot(a.x-b.x,a.y-b.y)||1};}
+stageEl.addEventListener('pointerdown',function(e){
+  ptr[e.pointerId]={x:e.clientX,y:e.clientY};
+  try{stageEl.setPointerCapture(e.pointerId);}catch(_){}
+  var n=Object.keys(ptr).length;
+  if(n===2){var m=midOf();pinch={d:m.d,s:Z.s,mx:m.x,my:m.y};divDrag=false;}
+  else if(n===1){moved=0;if(!split&&Z.s<=1.001){divDrag=true;pWork.classList.remove('morph');divTo(e);}}
+});
+stageEl.addEventListener('pointermove',function(e){
+  var p=ptr[e.pointerId];if(!p)return;
+  var dx=e.clientX-p.x,dy=e.clientY-p.y;p.x=e.clientX;p.y=e.clientY;
+  if(Object.keys(ptr).length>=2&&pinch){
+    var m=midOf();
+    Z.x+=m.x-pinch.mx;Z.y+=m.y-pinch.my;pinch.mx=m.x;pinch.my=m.y;
+    zoomAt(pinch.s*m.d/pinch.d,m.x,m.y);
+    moved+=99;return;
+  }
+  moved+=Math.abs(dx)+Math.abs(dy);
+  if(Z.s>1.001){Z.x+=dx;Z.y+=dy;clampZ(refRect(e.clientX,e.clientY));applyZ();}
+  else if(divDrag)divTo(e);
+});
+function upP(e){
+  var had=ptr[e.pointerId];delete ptr[e.pointerId];
+  var n=Object.keys(ptr).length;
+  if(n<2)pinch=null;
+  if(n===0)divDrag=false;
+  if(e.type==='pointerup'&&had&&n===0&&moved<8){
+    var now=Date.now();
+    if(now-lastTap<350&&Math.hypot(e.clientX-tapX,e.clientY-tapY)<30){
+      if(Z.s>1.001)resetZ();else zoomAt(2.5,e.clientX,e.clientY);
+      lastTap=0;
+    }else{lastTap=now;tapX=e.clientX;tapY=e.clientY;}
+  }
+}
+stageEl.addEventListener('pointerup',upP);
+stageEl.addEventListener('pointercancel',upP);
+stageEl.addEventListener('wheel',function(e){
+  if(!(e.ctrlKey||e.metaKey))return;
+  e.preventDefault();zoomAt(Z.s*Math.exp(-e.deltaY*0.01),e.clientX,e.clientY);
+},{passive:false});
+['gesturestart','gesturechange','gestureend'].forEach(function(n){stageEl.addEventListener(n,function(e){e.preventDefault();});});
+bindDrag($('.slider',pWork),function(){return $('.slider',pWork).getBoundingClientRect();});
+$('.hd',pWork).addEventListener('keydown',function(e){
   var s=e.shiftKey?10:2;
-  if(e.key==='ArrowLeft'||e.key==='ArrowDown'){setPos('work',pos.work-s);e.preventDefault();}
-  else if(e.key==='ArrowRight'||e.key==='ArrowUp'){setPos('work',pos.work+s);e.preventDefault();}
-  else if(e.key==='Home'){setPos('work',0);e.preventDefault();}
-  else if(e.key==='End'){setPos('work',100);e.preventDefault();}
+  if(e.key==='ArrowLeft'||e.key==='ArrowDown'){setPos(pos-s);e.preventDefault();}
+  else if(e.key==='ArrowRight'||e.key==='ArrowUp'){setPos(pos+s);e.preventDefault();}
+  else if(e.key==='Home'){setPos(0);e.preventDefault();}
+  else if(e.key==='End'){setPos(100);e.preventDefault();}
 });
 
-/* home: dimostrazione automatica, coordinata con l'interruttore */
-var raf=0,t0=0,hT=0,hRun=false,hi=0;
-function setHome(v){
-  if(v===hsplit)return;
-  hsplit=v;
-  var f=frames.home,w=$('.home-sw');
-  f.classList.add('morph');f.classList.toggle('split',v);
-  $('.track',w).setAttribute('aria-checked',String(!v));
-  $$('.lbl',w).forEach(function(b){b.setAttribute('aria-pressed',String((b.getAttribute('data-m')==='split')===v));});
-  if(v)setPos('home',40);
-  setTimeout(function(){f.classList.remove('morph');},1000);
-}
-function homeTick(ts){
-  if(hsplit||!hRun){raf=0;return;}
-  if(!t0)t0=ts;
-  setPos('home',40+10*(1-Math.cos((ts-t0)/1000*1.75))/2);
-  raf=requestAnimationFrame(homeTick);
-}
-var HS=[
-  [2400,function(){setHome(false);}],
-  [1100,function(){t0=0;if(!raf)raf=requestAnimationFrame(homeTick);}],
-  [7200,function(){setHome(true);}],
-  [1800,function(){}]
-];
-function homeNext(){
-  if(!hRun)return;
-  var st=HS[hi];
-  hT=setTimeout(function(){if(!hRun)return;st[1]();hi=(hi+1)%HS.length;homeNext();},st[0]);
-}
-function homeStart(){if(hRun||page!=='home'||reduce||document.hidden)return;hRun=true;hi=0;setHome(true);homeNext();}
-function homeStop(){hRun=false;clearTimeout(hT);if(raf)cancelAnimationFrame(raf);raf=0;}
-document.addEventListener('visibilitychange',function(){if(document.hidden)homeStop();else homeStart();});
-
 /* ---------- interruttore ---------- */
-function applyUnder(){
-  var u=$('.under',frames.work);
-  if(mq.matches){u.style.height='';return;}
-  u.style.height=(split?(cap1?cap1+16+40:56):72)+'px';
-}
 function setMode(s){
   if(s===split)return;
   split=s;
-  frames.work.classList.add('morph');frames.work.classList.toggle('split',s);
-  $$('.sw:not(.home-sw)').forEach(function(w){
-    $('.track',w).setAttribute('aria-checked',String(!s));
-    $$('.lbl',w).forEach(function(b){b.setAttribute('aria-pressed',String((b.getAttribute('data-m')==='split')===s));});
-  });
-  $$('.hd').forEach(function(h){if(h.getAttribute('aria-hidden')!=='true')h.tabIndex=s?-1:0;});
-  applyUnder();
-  clearTimeout(mt);
-  mt=setTimeout(function(){frames.work.classList.remove('morph');},1000);
+  pWork.classList.add('morph');pWork.classList.toggle('split',s);
+  $('.track',pWork).setAttribute('aria-checked',String(!s));
+  $$('.lbl',pWork).forEach(function(b){b.setAttribute('aria-pressed',String((b.getAttribute('data-m')==='split')===s));});
+  $('.hd',pWork).tabIndex=s?-1:0;
+  clearTimeout(mt);mt=setTimeout(function(){pWork.classList.remove('morph');},1000);
 }
-$$('.sw:not(.home-sw)').forEach(function(w){
-  $('.track',w).addEventListener('click',function(){setMode(!split);});
-  $$('.lbl',w).forEach(function(b){b.addEventListener('click',function(){setMode(b.getAttribute('data-m')==='split');});});
-});
-$$('.hd',frames.work).forEach(function(h){h.tabIndex=-1;});
+$('.track',pWork).addEventListener('click',function(){setMode(!split);});
+$$('.lbl',pWork).forEach(function(b){b.addEventListener('click',function(){setMode(b.getAttribute('data-m')==='split');});});
 
-/* ---------- progetti ---------- */
+/* ---------- immagini ---------- */
 function setImg(el,src){if(src)el.src=src;else el.removeAttribute('src');}
-function measure(){
-  if(cap.hidden||!frames.work.clientWidth||mq.matches){cap1=cap2=0;frames.work.style.setProperty('--caph','0px');applyUnder();return;}
-  var F=frames.work.clientWidth;
-  function h(w){var c=cap.cloneNode(true);c.removeAttribute('id');c.className='cap2';c.style.cssText='position:absolute;left:0;top:0;visibility:hidden;width:'+Math.max(w,40)+'px';
-    $$('[id]',c).forEach(function(n){n.removeAttribute('id');});frames.work.appendChild(c);var r=c.offsetHeight;c.remove();return r;}
-  cap1=h(.459*F);cap2=h(.226*F-28);
-  frames.work.style.setProperty('--caph',cap2+'px');
-  applyUnder();
-}
 function show(){
   var v=vis();if(cur>=v.length)cur=Math.max(0,v.length-1);
   var it=v[cur];
-  frames.work.hidden=!it;nums.hidden=v.length<2;none.hidden=!!it||ed();
+  if((it&&it.id)!==lastShown){lastShown=it&&it.id;resetZ();}
+  $('#stage').hidden=!it;cap.hidden=!it||!(it.title||it.abstract);nums.hidden=v.length<2;none.hidden=!!it||ed();
+  $('.slider',pWork).hidden=!it;$('.sw',pWork).hidden=!it&&!ed();
   if(it){
     var a=it.ar||.75;
-    frames.work.style.setProperty('--ar',a);frames.work.setAttribute('data-o',a<=1?'l':'p');
+    pWork.style.setProperty('--ar',a);pWork.setAttribute('data-o',a<=1?'l':'p');
     setImg(imgA,it.before);setImg(imgB,it.after);
-    capT.textContent=it.title||'';capA.textContent=it.abstract||'';cap.hidden=!(it.title||it.abstract);
-    measure();
+    capT.textContent=it.title||'';capA.textContent=it.abstract||'';
   }
   renderNums();updateStudio();
 }
@@ -184,8 +175,7 @@ function renderNums(){
   });
 }
 function numIndex(b){return Array.prototype.indexOf.call(nums.children,b);}
-function goTo(i){cur=i;show();try{history.replaceState(null,'','#progetti/'+(i+1));}catch(_){}}
-window.addEventListener('resize',function(){if(page==='work')measure();});
+function goTo(i){cur=i;show();try{history.replaceState(null,'','#immagini/'+(i+1));}catch(_){}}
 
 /* riordino trascinando i numeri (solo sviluppatore) */
 var dragS=null,noClick=false;
@@ -193,7 +183,7 @@ function moveItem(from,to){
   if(from===to||to<0||to>=items.length)return;
   var it=items.splice(from,1)[0];items.splice(to,0,it);
   cur=to;markDirty();show();
-  try{history.replaceState(null,'','#progetti/'+(cur+1));}catch(_){}
+  try{history.replaceState(null,'','#immagini/'+(cur+1));}catch(_){}
 }
 nums.addEventListener('pointerdown',function(e){
   if(!ed())return;
@@ -219,8 +209,8 @@ nums.addEventListener('pointermove',function(e){
   s.rects.forEach(function(r,k){if(k>=items.length)return;var d=Math.hypot(e.clientX-r.cx,e.clientY-r.cy);if(d<bd){bd=d;best=k;}});
   var r=s.rects[best],after=e.clientX>r.cx,slot=best+(after?1:0);
   s.to=slot>s.i?slot-1:slot;
-  s.mark.style.left=((after?r.r+16:r.l-16)-1)+'px';
-  s.mark.style.top=(r.t+8)+'px';s.mark.style.height=Math.max(r.b-r.t-16,8)+'px';
+  s.mark.style.left=((after?r.r+10:r.l-10)-1)+'px';
+  s.mark.style.top=(r.t+4)+'px';s.mark.style.height=Math.max(r.b-r.t-8,8)+'px';
 });
 function endDrag(e){
   var s=dragS;if(!s||e.pointerId!==s.id)return;
@@ -235,42 +225,35 @@ function endDrag(e){
 nums.addEventListener('pointerup',endDrag);
 nums.addEventListener('pointercancel',endDrag);
 
-/* ---------- chi sono ---------- */
+/* ---------- chi sono e contatti ---------- */
 function renderAbout(){
   $('#abName').textContent=profile.name;$('#abText').textContent=profile.text;
   var im=$('#abImg');if(profile.photo)im.src=profile.photo;else im.removeAttribute('src');im.alt=profile.name;
 }
-
-/* ---------- menu ---------- */
-var menu=$('#menu'),burger=$('#burger');
-function menuOpen(o){
-  menu.classList.toggle('open',o);menu.setAttribute('aria-hidden',String(!o));
-  burger.setAttribute('aria-expanded',String(o));$('.top').classList.toggle('mopen',o);burger.setAttribute('aria-label',o?'Chiudi il menu':'Apri il menu');
-  document.body.style.overflow=o?'hidden':'';
+function renderContacts(){
+  var m=$('#ctMail'),t=$('#ctTel');
+  m.textContent=profile.email;m.href='mailto:'+profile.email;m.hidden=!profile.email;
+  t.textContent=profile.phone;t.href='tel:'+(profile.phone||'').replace(/[^\d+]/g,'');t.hidden=!profile.phone;
+  $('#ctIva').textContent=profile.piva?'P.IVA '+profile.piva:'';
+  var x=$('#ctExtra');x.textContent=profile.extra||'';x.hidden=!profile.extra;
 }
-burger.addEventListener('click',function(){
-  var o=!menu.classList.contains('open');menuOpen(o);
-  if(!o&&location.hash==='#contatti'){try{history.replaceState(null,'','#'+(page==='home'?'':page==='about'?'chi-sono':'progetti'));}catch(_){}}
-});
-menu.addEventListener('click',function(e){var a=e.target.closest('a');if(a&&!a.classList.contains('ct')){menuOpen(false);}});
-document.addEventListener('keydown',function(e){if(e.key==='Escape'&&menu.classList.contains('open'))menuOpen(false);});
 
 /* ---------- pagine ---------- */
+var TITLES={home:'Alessio Minetto · Fotoinserimenti',work:'Immagini · Alessio Minetto',about:'Chi sono · Alessio Minetto',contacts:'Contatti · Alessio Minetto'};
 function route(){
-  var h=decodeURIComponent(location.hash.replace(/^#\/?/,'')),m;
-  if(h==='contatti'){menuOpen(true);return;}
-  menuOpen(false);
-  var p='home';
+  var h=decodeURIComponent(location.hash.replace(/^#\/?/,'')),m,p='home';
   if(h==='chi-sono')p='about';
-  else if((m=/^(?:progetti\/)?(\d+)$/.exec(h))){p='work';cur=Math.max(0,parseInt(m[1],10)-1);}
-  else if(h==='progetti')p='work';
+  else if(h==='contatti')p='contacts';
+  else if((m=/^(?:(?:immagini|progetti)\/)?(\d+)$/.exec(h))){p='work';cur=Math.max(0,parseInt(m[1],10)-1);}
+  else if(h==='immagini'||h==='progetti')p='work';
   var changed=p!==page;page=p;
-  $$('main .page').forEach(function(s){s.hidden=s.getAttribute('data-r')!==p;});
-  $$('.nav a').forEach(function(a){if(a.getAttribute('data-r')===p)a.setAttribute('aria-current','page');else a.removeAttribute('aria-current');});
+  board.setAttribute('data-page',p);
+  $$('.page',board).forEach(function(s){s.hidden=s.getAttribute('data-r')!==p;});
+  $$('.vnav .lk').forEach(function(a){if(a.getAttribute('data-r')===p)a.setAttribute('aria-current','page');else a.removeAttribute('aria-current');});
+  document.title=TITLES[p];
   if(changed)window.scrollTo(0,0);
   if(p==='work')show();
   updateStudio();
-  if(p==='home')homeStart();else homeStop();
 }
 window.addEventListener('hashchange',route);
 
@@ -289,10 +272,11 @@ function prep(file,max,q){
     return {url:c.toDataURL('image/jpeg',q),ar:c.height/c.width};
   });
 }
+var PUB='<div class="row"><button class="btn primary pub" type="button" disabled>Scarica aggiornamento</button><span class="stat" role="status"></span></div>';
 function updateStudio(){
   if(!studio)return;
-  var proj=ed()&&page==='work',prof=ed()&&page==='about';
-  $('#stProj').hidden=!proj;$('#stProf').hidden=!prof;
+  var on=ed();
+  $('#stProj').hidden=!(on&&page==='work');$('#stProf').hidden=!(on&&page==='about');$('#stCont').hidden=!(on&&page==='contacts');
   var it=vis()[cur];
   $('#upA').textContent=(it&&it.before?'Sostituisci':'Carica')+' stato di fatto';
   $('#upB').textContent=(it&&it.after?'Sostituisci':'Carica')+' stato di progetto';
@@ -301,30 +285,33 @@ function updateStudio(){
     if(document.activeElement!==$('#ttl'))$('#ttl').value=it.title||'';
     if(document.activeElement!==$('#abs'))$('#abs').value=it.abstract||'';
   }
-  $('#lnk').textContent=it?'Link di questo progetto: '+location.href.split('#')[0].replace(/admin\.html.*$/,'')+'#progetti/'+(cur+1):'';
-  if(document.activeElement!==$('#pn'))$('#pn').value=profile.name||'';
-  if(document.activeElement!==$('#pt'))$('#pt').value=profile.text||'';
+  $('#lnk').textContent=it?'Link di questa immagine: '+location.href.split('#')[0].replace(/admin\.html.*$/,'')+'#immagini/'+(cur+1):'';
+  [['pn','name'],['pt','text'],['cm','email'],['cp','phone'],['cv','piva'],['cx','extra']].forEach(function(k){var f=$('#'+k[0]);if(document.activeElement!==f)f.value=profile[k[1]]||'';});
   $$('.pub').forEach(function(b){b.disabled=!dirty||busy;});
+  var ge=document.getElementById('goEdit');if(ge)ge.hidden=!(on&&page!=='home');
   if(dirty&&!busy&&!$('.stat').textContent)say('Modifiche non ancora scaricate');
 }
 function buildStudio(){
   studio=true;
-  var sp=document.createElement('section');sp.className='studio';sp.id='stProj';sp.hidden=true;
-  sp.innerHTML='<p class="hint">Area sviluppatore. Per cambiare l’ordine dei progetti trascina i numeri (da tastiera: Maiusc con le frecce). Le modifiche restano su questo dispositivo finché non scarichi l’aggiornamento e lo carichi su GitHub.</p>'+
-    '<input class="field" id="ttl" maxlength="60" placeholder="Titolo del progetto" aria-label="Titolo del progetto">'+
+  var host=$('#studios');
+  function sec(id,html){var s=document.createElement('section');s.className='studio';s.id=id;s.hidden=true;s.innerHTML=html;host.appendChild(s);return s;}
+  sec('stProj','<p class="hint">Area sviluppatore: immagini. Per cambiare l’ordine trascina i numeri (da tastiera: Maiusc con le frecce). Le modifiche restano su questo dispositivo finché non scarichi l’aggiornamento e lo carichi su GitHub.</p>'+
+    '<input class="field" id="ttl" maxlength="60" placeholder="Titolo" aria-label="Titolo">'+
     '<textarea class="field" id="abs" rows="2" maxlength="200" placeholder="Breve descrizione (compare sotto le immagini)" aria-label="Descrizione"></textarea>'+
     '<p class="hint" id="lnk"></p>'+
     '<div class="row"><button class="btn" id="upA" type="button"></button><button class="btn" id="upB" type="button"></button></div>'+
-    '<div class="row"><button class="btn" id="add" type="button">Nuovo progetto</button><button class="btn" id="del" type="button">Elimina questo progetto</button></div>'+PUB+
-    '<input type="file" id="file" accept="image/*" hidden>';
-  $('#pWork').appendChild(sp);
-  var pp=document.createElement('section');pp.className='studio';pp.id='stProf';pp.hidden=true;
-  pp.innerHTML='<p class="hint">Area sviluppatore: pagina «Chi sono». Le modifiche restano su questo dispositivo finché non scarichi l’aggiornamento.</p>'+
+    '<div class="row"><button class="btn" id="add" type="button">Nuovo confronto</button><button class="btn" id="del" type="button">Elimina questo confronto</button></div>'+PUB+
+    '<input type="file" id="file" accept="image/*" hidden>');
+  sec('stProf','<p class="hint">Area sviluppatore: pagina «Chi sono». Le modifiche restano su questo dispositivo finché non scarichi l’aggiornamento.</p>'+
     '<input class="field" id="pn" maxlength="60" placeholder="Nome" aria-label="Nome">'+
-    '<textarea class="field" id="pt" rows="4" maxlength="300" placeholder="Descrizione (una riga per ogni a capo)" aria-label="Descrizione"></textarea>'+
+    '<textarea class="field" id="pt" rows="4" maxlength="300" placeholder="Descrizione (una riga per ogni a capo)" aria-label="Descrizione della persona"></textarea>'+
     '<div class="row"><button class="btn" id="pPh" type="button">Sostituisci la foto</button></div>'+PUB+
-    '<input type="file" id="fileP" accept="image/*" hidden>';
-  $('#pAbout').appendChild(pp);
+    '<input type="file" id="fileP" accept="image/*" hidden>');
+  sec('stCont','<p class="hint">Area sviluppatore: pagina «Contatti». Il campo «Altre informazioni» è facoltativo e compare in piccolo sotto la partita IVA.</p>'+
+    '<input class="field" id="cm" maxlength="80" placeholder="Email" aria-label="Email">'+
+    '<input class="field" id="cp" maxlength="30" placeholder="Telefono" aria-label="Telefono">'+
+    '<input class="field" id="cv" maxlength="30" placeholder="Partita IVA" aria-label="Partita IVA">'+
+    '<textarea class="field" id="cx" rows="3" maxlength="300" placeholder="Altre informazioni (indirizzo, C.F., Ordine…)" aria-label="Altre informazioni"></textarea>'+PUB);
   var target=null,file=$('#file');
   $('#upA').onclick=function(){target='before';file.click();};
   $('#upB').onclick=function(){target='after';file.click();};
@@ -333,18 +320,19 @@ function buildStudio(){
     var it=vis()[cur],t=target;say('Preparo l’immagine…');
     prep(f,1600,.82).then(function(r){it[t]=r.url;if(t==='before'||!it.before)it.ar=r.ar;say('');markDirty();show();}).catch(function(){say('Impossibile leggere questo file.');});
   };
-  $('#ttl').oninput=function(){var it=vis()[cur];if(it){it.title=this.value;capT.textContent=it.title;cap.hidden=!(it.title||it.abstract);measure();markDirty();}};
-  $('#abs').oninput=function(){var it=vis()[cur];if(it){it.abstract=this.value;capA.textContent=it.abstract;cap.hidden=!(it.title||it.abstract);measure();markDirty();}};
+  $('#ttl').oninput=function(){var it=vis()[cur];if(it){it.title=this.value;capT.textContent=it.title;cap.hidden=!(it.title||it.abstract);markDirty();}};
+  $('#abs').oninput=function(){var it=vis()[cur];if(it){it.abstract=this.value;capA.textContent=it.abstract;cap.hidden=!(it.title||it.abstract);markDirty();}};
   $('#add').onclick=function(){items.push({id:Date.now().toString(36),title:'',before:'',after:'',abstract:''});cur=items.length-1;say('');markDirty();show();};
   var armed=false,dt;
-  function disarm(){clearTimeout(dt);armed=false;$('#del').textContent='Elimina questo progetto';}
+  function disarm(){clearTimeout(dt);armed=false;$('#del').textContent='Elimina questo confronto';}
   $('#del').onclick=function(){
     if(!armed){armed=true;this.textContent='Conferma eliminazione';dt=setTimeout(disarm,3000);return;}
     disarm();var it=vis()[cur];if(!it)return;
     items.splice(items.indexOf(it),1);cur=Math.max(0,cur-1);say('');markDirty();show();
   };
-  $('#pn').oninput=function(){profile.name=this.value;renderAbout();markDirty();};
-  $('#pt').oninput=function(){profile.text=this.value;renderAbout();markDirty();};
+  function bindField(id,key,render){$('#'+id).oninput=function(){profile[key]=this.value;render();markDirty();};}
+  bindField('pn','name',renderAbout);bindField('pt','text',renderAbout);
+  bindField('cm','email',renderContacts);bindField('cp','phone',renderContacts);bindField('cv','piva',renderContacts);bindField('cx','extra',renderContacts);
   var fileP=$('#fileP');
   $('#pPh').onclick=function(){fileP.click();};
   fileP.onchange=function(){
@@ -356,14 +344,15 @@ function buildStudio(){
 }
 function buildBar(){
   var bar=document.createElement('div');bar.className='devbar';
-  bar.innerHTML='<span id="barTxt"></span><button class="barbtn" id="barBtn" type="button"></button>';
-  app.insertBefore(bar,app.firstChild);
+  bar.innerHTML='<span id="barTxt"></span><button class="barbtn" id="barBtn" type="button"></button><button class="barbtn" id="goEdit" type="button">Vai alla modifica ↓</button>';
+  document.body.appendChild(bar);
   function apply(){
     $('#barTxt',bar).textContent=preview?'Anteprima visitatore':'Vista sviluppatore';
     $('#barBtn',bar).textContent=preview?'Torna alla modifica':'Anteprima visitatore';
     if(page==='work')show();else{renderNums();updateStudio();}
   }
   $('#barBtn',bar).onclick=function(){preview=!preview;apply();};
+  $('#goEdit',bar).onclick=function(){var s=$$('.studio').filter(function(x){return !x.hidden;})[0];if(s)s.scrollIntoView({behavior:reduce?'auto':'smooth',block:'start'});};
   apply();
 }
 function dataToU8(u){var b=atob(u.split(',')[1]),a=new Uint8Array(b.length),i;for(i=0;i<b.length;i++)a[i]=b.charCodeAt(i);return a;}
@@ -374,7 +363,7 @@ function publish(){
   var out=items.map(function(it){
     return {id:it.id,title:it.title||'',ar:it.ar,abstract:it.abstract||'',before:store(it.before,it.id+'-fatto'),after:store(it.after,it.id+'-progetto')};
   });
-  var prof={name:profile.name,text:profile.text,photo:store(profile.photo,'ritratto')};
+  var prof={name:profile.name,text:profile.text,photo:store(profile.photo,'ritratto'),email:profile.email,phone:profile.phone,piva:profile.piva,extra:profile.extra};
   var js='window.CONFRONTI='+JSON.stringify({items:out,profile:prof}).replace(/</g,'\\u003c')+';\n';
   files.unshift({name:'data.js',data:new TextEncoder().encode(js)});
   files.forEach(function(f,i){
@@ -392,17 +381,17 @@ function publish(){
 
 /* ---------- avvio ---------- */
 function start(){
-  renderAbout();
+  renderAbout();renderContacts();
   if(ADMIN){buildStudio();buildBar();}
+  setPos(50);
   route();
   if(page!=='work')show();
-  setPos('home',40);setPos('work',50);
   var pre=function(){setTimeout(function(){items.forEach(function(it){[it.before,it.after,profile.photo].forEach(function(s){if(s&&!/^data:/.test(s)){var im=new Image();im.src=s;}});});},400);};
   if(document.readyState==='complete')pre();else window.addEventListener('load',pre);
 }
 if(ADMIN){
   dget().then(function(d){
-    if(d&&d.items&&d.items.length&&d.base===BASE){items=d.items;if(d.profile)profile=d.profile;dirty=true;}
+    if(d&&d.items&&d.items.length&&d.base===BASE){items=d.items;if(d.profile)profile=Object.assign({},DEF,d.profile);dirty=true;}
     start();
     if(dirty)say('Bozza ripristinata, non ancora scaricata');
   });
