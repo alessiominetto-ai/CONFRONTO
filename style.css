@@ -11,7 +11,11 @@ body{color:#fff;font-family:"Raleway","Helvetica Neue",Helvetica,Arial,sans-seri
 a{color:inherit;text-decoration:none}
 button{font-family:inherit}
 a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid #fff;outline-offset:3px}
-.wrap{min-height:100vh;min-height:100dvh;display:flex;align-items:center;justify-content:center}
+.home{min-height:100vh;min-height:100dvh;display:flex;align-items:center;justify-content:center}
+.site{position:relative}
+.sec{min-height:100vh;min-height:100dvh;display:flex;align-items:center;justify-content:center;scroll-snap-align:start}
+html{scroll-snap-type:y proximity}
+.fixlayer{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;z-index:20}
 .board{position:relative;flex:none;width:calc(1920*var(--u));height:calc(1080*var(--u))}
 .page{position:absolute;inset:0}
 
@@ -24,10 +28,10 @@ a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible{
 .lk[aria-current]:hover{font-weight:800}
 .vnav{position:absolute;inset:0;pointer-events:none;z-index:5}
 .vnav .lk{pointer-events:auto;right:calc(78*var(--u));top:calc(var(--t)*var(--u))}
-.slogo{position:absolute;left:calc(76*var(--u));top:calc(59*var(--u));width:calc(37*var(--u));display:block;line-height:0;z-index:6}
+.slogo{position:absolute;left:calc(76*var(--u));top:calc(59*var(--u));width:calc(37*var(--u));display:block;line-height:0;z-index:6;pointer-events:auto}
 .slogo svg,.blogo svg{display:block;width:100%;height:auto}
 .blogo{position:absolute;left:calc(868*var(--u));top:calc(250*var(--u));width:calc(185.5*var(--u))}
-[data-page="home"] .vnav,[data-page="home"] .slogo,[data-page="contacts"] .slogo{display:none}
+[data-active="contacts"] .slogo{display:none}
 
 /* home */
 .big{position:absolute;left:0;right:0;top:calc(523*var(--u));margin:0;text-align:center;font-size:calc(104.5*var(--u));line-height:calc(104.5*var(--u));font-weight:700;text-transform:uppercase;white-space:nowrap}
@@ -45,7 +49,7 @@ a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible{
 .lbl:first-child{justify-self:end}
 .lbl:last-child{justify-self:start}
 .lbl[aria-pressed="true"]{font-weight:700}
-.track{position:relative;width:calc(75*var(--u));height:calc(35*var(--u));border:max(2px,calc(3*var(--u))) solid #fff;border-radius:calc(35*var(--u));background:transparent;padding:0;cursor:pointer}
+.track{position:relative;width:calc(75*var(--u));height:calc(35*var(--u));border:max(2px,calc(3*var(--u))) solid #fff;border-radius:999px;background:transparent;padding:0;cursor:pointer}
 .track::after{content:"";position:absolute;top:50%;left:calc(4*var(--u));width:calc(21*var(--u));height:calc(21*var(--u));border-radius:50%;background:var(--c);transform:translateY(-50%);transition:left .7s var(--ease)}
 .track[aria-checked="true"]::after{left:calc(100% - calc(25*var(--u)))}
 .stage{position:absolute;left:0;right:0;top:calc(259*var(--u));height:calc(433*var(--u));touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
@@ -65,15 +69,15 @@ a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible{
 .cap span{display:block;margin-top:calc(4*var(--u));font-size:calc(20*var(--u));line-height:calc(24*var(--u));font-weight:300;overflow-wrap:anywhere}
 .slider{position:absolute;left:calc(50% - var(--pw)/2);width:var(--pw);top:calc(858*var(--u));height:calc(30*var(--u));touch-action:none;cursor:pointer;transition:opacity .6s var(--ease)}
 #pWork.split .slider{opacity:0;pointer-events:none}
-.ln{position:absolute;left:0;right:0;top:50%;height:max(2px,calc(3*var(--u)));transform:translateY(-50%);background:#666}
+.ln{position:absolute;left:0;right:0;top:calc(50% - max(2px,calc(3*var(--u)))/2);height:max(2px,calc(3*var(--u)));background:#666}
 .ln b{position:absolute;left:0;top:0;bottom:0;width:var(--pos,50%);background:#fff}
 .dot{position:absolute;left:0;top:50%;width:calc(10*var(--u));height:calc(10*var(--u));border-radius:50%;background:#fff;transform:translate(-50%,-50%)}
 .dot.r{left:100%;background:#666}
 .hd{position:absolute;left:var(--pos,50%);top:50%;width:calc(20*var(--u));height:calc(20*var(--u));border-radius:50%;background:var(--c);border:0;padding:0;transform:translate(-50%,-50%);box-shadow:0 0 0 max(2px,calc(3*var(--u))) #000,0 0 0 max(3px,calc(5*var(--u))) #fff;cursor:grab;touch-action:none}
 #pWork.morph .stage{transition:height .9s var(--ease)}
 #pWork.morph .pane{transition:left .9s var(--ease),top .9s var(--ease),width .9s var(--ease),height .9s var(--ease),clip-path .9s var(--ease)}
-.nums{position:absolute;left:0;right:0;top:calc(915*var(--u));height:calc(60*var(--u));display:flex;justify-content:center;align-items:center;flex-wrap:wrap;gap:0 calc(72*var(--u))}
-.num{background:none;border:0;padding:0;color:#fff;font:inherit;font-size:calc(40*var(--u));font-weight:400;line-height:1;cursor:pointer;transform-origin:50% 55%;transition:font-size .45s var(--ease),color .45s var(--ease),transform .25s var(--ease)}
+.nums{position:absolute;left:0;right:0;top:calc(905*var(--u));height:calc(80*var(--u));display:flex;justify-content:center;align-items:center;flex-wrap:wrap}
+.num{background:none;border:0;padding:0;width:calc(92*var(--u));height:calc(80*var(--u));display:inline-flex;align-items:center;justify-content:center;color:#fff;font:inherit;font-size:calc(40*var(--u));font-weight:400;line-height:1;cursor:pointer;transform-origin:50% 55%;transition:font-size .45s var(--ease),color .45s var(--ease),transform .25s var(--ease)}
 @media (hover:hover){.num:hover{color:#bbb}}
 .num:active{transform:scale(1.14)}
 .num[aria-current="true"]{color:var(--c);font-size:calc(69*var(--u));font-weight:700}
@@ -98,8 +102,7 @@ a.ct{left:50%;right:auto;width:max-content;transform:translateX(-50%)}
 .ct.c4{top:calc(846*var(--u));font-size:calc(16*var(--u));line-height:calc(24*var(--u));font-weight:300;color:#8a8a8a;white-space:pre-line}
 
 /* area sviluppatore */
-.studios{display:flex;flex-direction:column;align-items:center;padding:0 0 90px}
-.studio{width:min(92vw,64ch);margin:44px auto 0;padding-top:20px;border-top:1px solid #262626;display:flex;flex-direction:column;gap:14px;font-size:15px}
+.studio{width:min(92vw,64ch);margin:40px auto 60px;padding-top:20px;border-top:1px solid #262626;display:flex;flex-direction:column;gap:14px;font-size:15px}
 .studio .hint{margin:0;font-size:13px;color:#8a8a8a;line-height:1.45}
 .studio .row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
 .field{width:100%;background:transparent;border:0;border-bottom:1px solid #333;color:#fff;font:inherit;font-size:16px;padding:8px 0;resize:none}
@@ -116,7 +119,10 @@ a.ct{left:50%;right:auto;width:max-content;transform:translateX(-50%)}
 
 /* telefoni e schermi verticali: stessa struttura, impaginata in colonna */
 @media (max-aspect-ratio:1/1),(max-width:760px){
-  .wrap{display:block;min-height:0}
+  .home,.site,.sec{display:block;min-height:0}
+  .sec:not(.on){display:none}
+  .fixlayer{position:absolute;inset:0 0 auto 0;height:70px;display:block}
+  .fixlayer .board{width:100%;height:100%;min-height:0;display:block}
   .board{width:100%;height:auto;min-height:100vh;min-height:100dvh;display:flex;flex-direction:column}
   .page{position:static;inset:auto;display:flex;flex-direction:column;align-items:center;flex:1}
   .slogo{left:20px;top:18px;width:26px}
@@ -133,7 +139,7 @@ a.ct{left:50%;right:auto;width:max-content;transform:translateX(-50%)}
   #pWork{padding:78px 20px 36px;--W:calc(100vw - 40px);--g:14px;--pw:var(--W);--ph:calc(var(--pw)*var(--ar))}
   .sw{position:static;display:flex;justify-content:center;gap:12px;height:auto;margin-bottom:22px}
   .lbl{font-size:13px;line-height:24px}
-  .track{width:46px;height:23px;border-width:2px}
+  .track{width:46px;height:23px;border-width:2px;border-radius:999px}
   .track::after{left:3px;width:13px;height:13px}
   .track[aria-checked="true"]::after{left:calc(100% - 16px)}
   .stage{position:relative;left:auto;right:auto;top:auto;width:var(--W);height:var(--ph)}
@@ -152,8 +158,8 @@ a.ct{left:50%;right:auto;width:max-content;transform:translateX(-50%)}
   .ln{height:2px}
   .dot{width:8px;height:8px}
   .hd{width:18px;height:18px;box-shadow:0 0 0 2px #000,0 0 0 4px #fff}
-  .nums{position:static;height:auto;margin-top:20px;gap:6px 30px}
-  .num{font-size:22px}
+  .nums{position:static;height:auto;margin-top:20px}
+  .num{width:56px;height:56px;font-size:22px}
   .num[aria-current="true"]{font-size:34px}
   .none{position:static;margin-top:40px;font-size:15px}
   #pAbout{padding:84px 24px 40px;justify-content:center}

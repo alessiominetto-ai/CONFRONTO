@@ -15,27 +15,26 @@ var NAV=[['#immagini','work','Immagini',63],['#chi-sono','about','Chi sono',525]
 function navHTML(cls){return NAV.map(function(n,i){return '<a class="lk'+(cls?' '+cls[i]:'')+'" href="'+n[0]+'" data-r="'+n[1]+'" style="--t:'+n[3]+'">'+n[2]+'</a>';}).join('');}
 var SW='<div class="sw" role="group" aria-label="Modalità di visualizzazione"><button class="lbl" data-m="split" type="button" aria-pressed="true">Affiancate</button><button class="track" role="switch" aria-checked="false" aria-label="Sovrappone le immagini" type="button"></button><button class="lbl" data-m="over" type="button" aria-pressed="false">Sovrapposte</button></div>';
 app.innerHTML=
-'<div class="wrap"><div class="board" id="board" data-page="home">'+
-'<a class="slogo" href="#" aria-label="Home">'+LOGO+'</a>'+
-'<nav class="vnav" aria-label="Principale">'+navHTML()+'</nav>'+
-'<section class="page" id="pHome" data-r="home"><div class="blogo">'+LOGO+'</div><h1 class="big">Foto<em>inserimenti</em></h1><hr class="hline">'+
-'<nav class="hl" aria-label="Sezioni">'+navHTML(['l','c','r'])+'</nav></section>'+
-'<section class="page split" id="pWork" data-r="work" hidden>'+SW+
+'<div class="home" id="home"><div class="board"><div class="page" id="pHome" data-r="home"><div class="blogo">'+LOGO+'</div><h1 class="big">Foto<em>inserimenti</em></h1><hr class="hline">'+
+'<nav class="hl" aria-label="Sezioni">'+navHTML(['l','c','r'])+'</nav></div></div></div>'+
+'<div class="site" id="site" data-active="work" hidden>'+
+'<div class="fixlayer"><div class="board"><a class="slogo" href="#" aria-label="Home">'+LOGO+'</a><nav class="vnav" aria-label="Principale">'+navHTML()+'</nav></div></div>'+
+'<section class="sec" id="sWork"><div class="board"><div class="page split" id="pWork" data-r="work">'+SW+
 '<div class="stage" id="stage"><div class="pane before"><img id="imgA" alt="Stato di fatto" decoding="async" fetchpriority="high"></div>'+
 '<div class="pane after"><img id="imgB" alt="Stato di progetto" decoding="async" fetchpriority="high"></div></div>'+
 '<div class="cap" id="cap"><b id="capT"></b><span id="capA"></span></div>'+
 '<div class="slider"><i class="dot"></i><i class="dot r"></i><span class="ln"><b></b></span><button class="hd" type="button" role="slider" aria-label="Cursore di confronto" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50" tabindex="-1"></button></div>'+
 '<p class="none" id="none" hidden>Nessuna immagine disponibile.</p>'+
-'<nav class="nums" id="nums" aria-label="Immagini" hidden></nav></section>'+
-'<section class="page" id="pAbout" data-r="about" hidden><div class="por"><img id="abImg" alt="" width="640" height="640"></div>'+
-'<div class="abt"><h2 id="abName"></h2><p id="abText"></p></div></section>'+
-'<section class="page" id="pContacts" data-r="contacts" hidden><div class="blogo">'+LOGO+'</div>'+
-'<a class="ct c1" id="ctMail" href="#"></a><a class="ct c2" id="ctTel" href="#"></a><span class="ct c3" id="ctIva"></span><div class="ct c4" id="ctExtra"></div></section>'+
-'</div></div><div class="studios" id="studios"></div>';
+'<nav class="nums" id="nums" aria-label="Immagini" hidden></nav></div></div></section>'+
+'<section class="sec" id="sAbout"><div class="board"><div class="page" id="pAbout" data-r="about"><div class="por"><img id="abImg" alt="" width="640" height="640"></div>'+
+'<div class="abt"><h2 id="abName"></h2><p id="abText"></p></div></div></div></section>'+
+'<section class="sec" id="sContacts"><div class="board"><div class="page" id="pContacts" data-r="contacts"><div class="blogo">'+LOGO+'</div>'+
+'<a class="ct c1" id="ctMail" href="#"></a><a class="ct c2" id="ctTel" href="#"></a><span class="ct c3" id="ctIva"></span><div class="ct c4" id="ctExtra"></div></div></div></section>'+
+'</div>';
 
 function $(s,r){return (r||app).querySelector(s);}
 function $$(s,r){return Array.prototype.slice.call((r||app).querySelectorAll(s));}
-var board=$('#board'),pWork=$('#pWork'),imgA=$('#imgA'),imgB=$('#imgB'),cap=$('#cap'),capT=$('#capT'),capA=$('#capA'),nums=$('#nums'),none=$('#none');
+var pWork=$('#pWork'),imgA=$('#imgA'),imgB=$('#imgB'),cap=$('#cap'),capT=$('#capT'),capA=$('#capA'),nums=$('#nums'),none=$('#none');
 var lastShown=null,split=true,page='home',cur=0,canEdit=ADMIN,preview=false,dirty=false,busy=false,studio=false,mt=0,pos=50;
 function ed(){return canEdit&&!preview;}
 function vis(){return ed()?items:items.filter(function(i){return i.before&&i.after;});}
@@ -238,24 +237,56 @@ function renderContacts(){
   var x=$('#ctExtra');x.textContent=profile.extra||'';x.hidden=!profile.extra;
 }
 
-/* ---------- pagine ---------- */
+/* ---------- pagine: la home e un'unica seconda pagina con tre sezioni ---------- */
 var TITLES={home:'Alessio Minetto · Fotoinserimenti',work:'Immagini · Alessio Minetto',about:'Chi sono · Alessio Minetto',contacts:'Contatti · Alessio Minetto'};
+var SECS={work:'sWork',about:'sAbout',contacts:'sContacts'},HASH={work:'immagini',about:'chi-sono',contacts:'contatti'};
+var mqv=window.matchMedia('(max-aspect-ratio:1/1),(max-width:760px)'),lock=false,lockT=0;
+function mobile(){return mqv.matches;}
+try{if('scrollRestoration' in history)history.scrollRestoration='manual';}catch(_){}
+function setActive(p){
+  page=p;
+  $('#site').setAttribute('data-active',p);
+  $$('.vnav .lk').forEach(function(a){if(a.getAttribute('data-r')===p)a.setAttribute('aria-current','page');else a.removeAttribute('aria-current');});
+  $$('.sec').forEach(function(x){x.classList.toggle('on',x.id===SECS[p]);});
+  document.title=TITLES[p];
+  updateStudio();
+}
 function route(){
   var h=decodeURIComponent(location.hash.replace(/^#\/?/,'')),m,p='home';
   if(h==='chi-sono')p='about';
   else if(h==='contatti')p='contacts';
   else if((m=/^(?:(?:immagini|progetti)\/)?(\d+)$/.exec(h))){p='work';cur=Math.max(0,parseInt(m[1],10)-1);}
   else if(h==='immagini'||h==='progetti')p='work';
-  var changed=p!==page;page=p;
-  board.setAttribute('data-page',p);
-  $$('.page',board).forEach(function(s){s.hidden=s.getAttribute('data-r')!==p;});
-  $$('.vnav .lk').forEach(function(a){if(a.getAttribute('data-r')===p)a.setAttribute('aria-current','page');else a.removeAttribute('aria-current');});
-  document.title=TITLES[p];
-  if(changed)window.scrollTo(0,0);
-  if(p==='work')show();
-  updateStudio();
+  $('#home').hidden=p!=='home';$('#site').hidden=p==='home';
+  if(p==='home'){page='home';document.title=TITLES.home;window.scrollTo(0,0);updateStudio();return;}
+  setActive(p);
+  show();
+  if(mobile()){window.scrollTo(0,0);return;}
+  lock=true;clearTimeout(lockT);
+  requestAnimationFrame(function(){
+    $('#'+SECS[p]).scrollIntoView({behavior:'auto',block:'start'});
+    lockT=setTimeout(function(){lock=false;},150);
+  });
 }
 window.addEventListener('hashchange',route);
+/* dalla seconda pagina: le parole a destra portano alla sezione e la linea segue la sezione guardata */
+$('.vnav').addEventListener('click',function(e){
+  var a=e.target.closest('.lk');if(!a||mobile())return;
+  e.preventDefault();
+  var k=a.getAttribute('data-r');
+  lock=true;clearTimeout(lockT);lockT=setTimeout(function(){lock=false;},950);
+  setActive(k);
+  $('#'+SECS[k]).scrollIntoView({behavior:reduce?'auto':'smooth',block:'start'});
+  try{history.replaceState(null,'','#'+HASH[k]);}catch(_){}
+});
+function spy(){
+  if(lock||page==='home'||mobile())return;
+  var mid=window.innerHeight/2,best=null;
+  Object.keys(SECS).forEach(function(k){var r=$('#'+SECS[k]).getBoundingClientRect();if(r.top<=mid&&r.bottom>mid)best=k;});
+  if(best&&best!==page){setActive(best);try{history.replaceState(null,'','#'+HASH[best]);}catch(_){}}
+}
+window.addEventListener('scroll',spy,{passive:true});
+if(mqv.addEventListener)mqv.addEventListener('change',function(){if(page!=='home')route();});
 
 /* ---------- area sviluppatore (solo admin.html) ---------- */
 function idb(){return new Promise(function(res,rej){var r=indexedDB.open('confronto',1);r.onupgradeneeded=function(){r.result.createObjectStore('kv');};r.onsuccess=function(){res(r.result);};r.onerror=function(){rej(r.error);};});}
@@ -275,8 +306,8 @@ function prep(file,max,q){
 var PUB='<div class="row"><button class="btn primary pub" type="button" disabled>Scarica aggiornamento</button><span class="stat" role="status"></span></div>';
 function updateStudio(){
   if(!studio)return;
-  var on=ed();
-  $('#stProj').hidden=!(on&&page==='work');$('#stProf').hidden=!(on&&page==='about');$('#stCont').hidden=!(on&&page==='contacts');
+  var on=ed(),mb=mobile();
+  $('#stProj').hidden=!(on&&page!=='home'&&(!mb||page==='work'));$('#stProf').hidden=!(on&&page!=='home'&&(!mb||page==='about'));$('#stCont').hidden=!(on&&page!=='home'&&(!mb||page==='contacts'));
   var it=vis()[cur];
   $('#upA').textContent=(it&&it.before?'Sostituisci':'Carica')+' stato di fatto';
   $('#upB').textContent=(it&&it.after?'Sostituisci':'Carica')+' stato di progetto';
@@ -293,8 +324,8 @@ function updateStudio(){
 }
 function buildStudio(){
   studio=true;
-  var host=$('#studios');
-  function sec(id,html){var s=document.createElement('section');s.className='studio';s.id=id;s.hidden=true;s.innerHTML=html;host.appendChild(s);return s;}
+  var AFTER={stProj:'sWork',stProf:'sAbout',stCont:'sContacts'};
+  function sec(id,html){var s=document.createElement('section');s.className='studio';s.id=id;s.hidden=true;s.innerHTML=html;$('#'+AFTER[id]).insertAdjacentElement('afterend',s);return s;}
   sec('stProj','<p class="hint">Area sviluppatore: immagini. Per cambiare l’ordine trascina i numeri (da tastiera: Maiusc con le frecce). Le modifiche restano su questo dispositivo finché non scarichi l’aggiornamento e lo carichi su GitHub.</p>'+
     '<input class="field" id="ttl" maxlength="60" placeholder="Titolo" aria-label="Titolo">'+
     '<textarea class="field" id="abs" rows="2" maxlength="200" placeholder="Breve descrizione (compare sotto le immagini)" aria-label="Descrizione"></textarea>'+
@@ -352,7 +383,7 @@ function buildBar(){
     if(page==='work')show();else{renderNums();updateStudio();}
   }
   $('#barBtn',bar).onclick=function(){preview=!preview;apply();};
-  $('#goEdit',bar).onclick=function(){var s=$$('.studio').filter(function(x){return !x.hidden;})[0];if(s)s.scrollIntoView({behavior:reduce?'auto':'smooth',block:'start'});};
+  $('#goEdit',bar).onclick=function(){var s=$('#'+({work:'stProj',about:'stProf',contacts:'stCont'}[page]||'stProj'));if(s&&!s.hidden)s.scrollIntoView({behavior:reduce?'auto':'smooth',block:'start'});};
   apply();
 }
 function dataToU8(u){var b=atob(u.split(',')[1]),a=new Uint8Array(b.length),i;for(i=0;i<b.length;i++)a[i]=b.charCodeAt(i);return a;}
