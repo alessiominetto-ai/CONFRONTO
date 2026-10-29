@@ -20,8 +20,8 @@ app.innerHTML=
 '<div class="site" id="site" data-active="work" hidden>'+
 '<div class="fixlayer"><div class="board"><a class="slogo" href="#" aria-label="Home">'+LOGO+'</a><nav class="vnav" aria-label="Principale">'+navHTML()+'</nav></div></div>'+
 '<section class="sec" id="sWork"><div class="board"><div class="page split" id="pWork" data-r="work">'+SW+
-'<div class="stage" id="stage"><div class="pane before"><img id="imgA" alt="Stato di fatto" decoding="async" fetchpriority="high"></div>'+
-'<div class="pane after"><img id="imgB" alt="Stato di progetto" decoding="async" fetchpriority="high"></div></div>'+
+'<div class="stage" id="stage"><div class="pane before"><img id="imgA" alt="Stato di fatto" decoding="async" fetchpriority="high"><div class="veil" aria-hidden="true">Utilizza due dita per spostare l’immagine</div></div>'+
+'<div class="pane after"><img id="imgB" alt="Stato di progetto" decoding="async" fetchpriority="high"><div class="veil" aria-hidden="true">Utilizza due dita per spostare l’immagine</div></div></div>'+
 '<div class="cap" id="cap"><b id="capT"></b><span id="capA"></span></div>'+
 '<div class="slider"><i class="dot"></i><i class="dot r"></i><span class="ln"><b></b></span><button class="hd" type="button" role="slider" aria-label="Cursore di confronto" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50" tabindex="-1"></button></div>'+
 '<p class="none" id="none" hidden>Nessuna immagine disponibile.</p>'+
@@ -81,6 +81,7 @@ function resetZ(){Z.s=1;Z.x=0;Z.y=0;applyZ();}
 function divTo(e){var r=$('.pane.before',pWork).getBoundingClientRect();if(r.width)setPos((e.clientX-r.left)/r.width*100);}
 function midOf(){var ids=Object.keys(ptr),a=ptr[ids[0]],b=ptr[ids[1]];return {x:(a.x+b.x)/2,y:(a.y+b.y)/2,d:Math.hypot(a.x-b.x,a.y-b.y)||1};}
 stageEl.addEventListener('pointerdown',function(e){
+  if(e.pointerType==='touch')return;
   ptr[e.pointerId]={x:e.clientX,y:e.clientY};
   try{stageEl.setPointerCapture(e.pointerId);}catch(_){}
   var n=Object.keys(ptr).length;
@@ -113,6 +114,49 @@ function upP(e){
     }else{lastTap=now;tapX=e.clientX;tapY=e.clientY;}
   }
 }
+
+/* tocco: un dito fa scorrere la pagina (compare l'avviso), due dita ingrandiscono e spostano l'immagine */
+var tP=null,hintT=0,tTap=null,tWasPinch=false,tLastTap=0,tLX=0,tLY=0;
+function showHint(){clearTimeout(hintT);stageEl.classList.add('hint');}
+function hideHint(now){clearTimeout(hintT);if(now)stageEl.classList.remove('hint');else hintT=setTimeout(function(){stageEl.classList.remove('hint');},1100);}
+stageEl.addEventListener('touchstart',function(e){
+  var t=e.touches;
+  if(t.length===1){
+    tWasPinch=false;tTap={x:t[0].clientX,y:t[0].clientY,t:Date.now(),m:0};tLX=t[0].clientX;tLY=t[0].clientY;
+    if(Z.s<=1.001||true)showHint();
+  }else if(t.length>=2){
+    if(e.cancelable)e.preventDefault();
+    tWasPinch=true;hideHint(true);
+    var a=t[0],b=t[1];
+    tP={d:Math.hypot(a.clientX-b.clientX,a.clientY-b.clientY)||1,s:Z.s,mx:(a.clientX+b.clientX)/2,my:(a.clientY+b.clientY)/2};
+  }
+},{passive:false});
+stageEl.addEventListener('touchmove',function(e){
+  var t=e.touches;
+  if(t.length>=2&&tP){
+    if(e.cancelable)e.preventDefault();
+    var a=t[0],b=t[1],mx=(a.clientX+b.clientX)/2,my=(a.clientY+b.clientY)/2,d=Math.hypot(a.clientX-b.clientX,a.clientY-b.clientY)||1;
+    Z.x+=mx-tP.mx;Z.y+=my-tP.my;tP.mx=mx;tP.my=my;
+    zoomAt(tP.s*d/tP.d,mx,my);
+  }else if(t.length===1&&tTap){
+    tTap.m+=Math.abs(t[0].clientX-tLX)+Math.abs(t[0].clientY-tLY);tLX=t[0].clientX;tLY=t[0].clientY;
+  }
+},{passive:false});
+function tEnd(e){
+  var n=e.touches.length;
+  if(n<2)tP=null;
+  if(n===0){
+    hideHint(false);
+    if(tTap&&!tWasPinch&&tTap.m<10&&Date.now()-tTap.t<350){
+      var now=Date.now();
+      if(now-tLastTap<350){tLastTap=0;if(Z.s>1.001)resetZ();else zoomAt(2.5,tTap.x,tTap.y);}
+      else tLastTap=now;
+    }
+    tTap=null;
+  }
+}
+stageEl.addEventListener('touchend',tEnd,{passive:false});
+stageEl.addEventListener('touchcancel',function(e){tP=null;tTap=null;hideHint(false);},{passive:false});
 stageEl.addEventListener('pointerup',upP);
 stageEl.addEventListener('pointercancel',upP);
 stageEl.addEventListener('wheel',function(e){
