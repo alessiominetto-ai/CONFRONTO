@@ -322,7 +322,6 @@ function route(){
   if(p==='home'){page='home';document.title=TITLES.home;window.scrollTo(0,0);updateStudio();return;}
   setActive(p);
   show();
-  if(mobile()){window.scrollTo(0,0);return;}
   lock=true;clearTimeout(lockT);
   requestAnimationFrame(function(){
     $('#'+SECS[p]).scrollIntoView({behavior:'auto',block:'start'});
@@ -332,7 +331,7 @@ function route(){
 window.addEventListener('hashchange',route);
 /* dalla seconda pagina: le parole a destra portano alla sezione e la linea segue la sezione guardata */
 $('.vnav').addEventListener('click',function(e){
-  var a=e.target.closest('.lk');if(!a||mobile())return;
+  var a=e.target.closest('.lk');if(!a)return;
   e.preventDefault();
   var k=a.getAttribute('data-r');
   lock=true;clearTimeout(lockT);lockT=setTimeout(function(){lock=false;},950);
@@ -341,13 +340,13 @@ $('.vnav').addEventListener('click',function(e){
   try{history.replaceState(null,'','#'+HASH[k]);}catch(_){}
 });
 function spy(){
-  if(lock||page==='home'||mobile())return;
+  if(lock||page==='home')return;
   var mid=window.innerHeight/2,best=null;
   Object.keys(SECS).forEach(function(k){var r=$('#'+SECS[k]).getBoundingClientRect();if(r.top<=mid&&r.bottom>mid)best=k;});
   if(best&&best!==page){setActive(best);try{history.replaceState(null,'','#'+HASH[best]);}catch(_){}}
 }
 window.addEventListener('scroll',spy,{passive:true});
-if(mqv.addEventListener)mqv.addEventListener('change',function(){if(page!=='home')route();});
+
 
 /* ---------- area sviluppatore (solo admin.html) ---------- */
 function idb(){return new Promise(function(res,rej){var r=indexedDB.open('confronto',1);r.onupgradeneeded=function(){r.result.createObjectStore('kv');};r.onsuccess=function(){res(r.result);};r.onerror=function(){rej(r.error);};});}
@@ -367,8 +366,8 @@ function prep(file,max,q){
 var PUB='<div class="row"><button class="btn primary pub" type="button" disabled>Scarica aggiornamento</button><span class="stat" role="status"></span></div>';
 function updateStudio(){
   if(!studio)return;
-  var on=ed(),mb=mobile();
-  $('#stProj').hidden=!(on&&page!=='home'&&(!mb||page==='work'));$('#stProf').hidden=!(on&&page!=='home'&&(!mb||page==='about'));$('#stCont').hidden=!(on&&page!=='home'&&(!mb||page==='contacts'));$('#stPub').hidden=!(on&&page!=='home');
+  var on=ed();
+  $('#stProj').hidden=!(on&&page!=='home');$('#stProf').hidden=!(on&&page!=='home');$('#stCont').hidden=!(on&&page!=='home');$('#stPub').hidden=!(on&&page!=='home');
   var it=vis()[cur];
   $('#upA').textContent=(it&&it.before?'Sostituisci':'Carica')+' stato di fatto';
   $('#upB').textContent=(it&&it.after?'Sostituisci':'Carica')+' stato di progetto';

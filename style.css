@@ -89,7 +89,7 @@ html{scroll-snap-type:y proximity}
 /* chi sono */
 .por{position:absolute;left:calc(364*var(--u));top:calc(326*var(--u));width:calc(388*var(--u));height:calc(390*var(--u))}
 .por img{position:absolute;right:0;bottom:0;width:calc(461*var(--u));height:auto;display:block}
-.abt{position:absolute;left:calc(853*var(--u));top:calc(537*var(--u));width:calc(900*var(--u))}
+.abt{position:absolute;left:calc(853*var(--u));top:calc(309*var(--u));width:calc(900*var(--u));height:calc(390*var(--u));display:flex;flex-direction:column;justify-content:center}
 .abt h2{margin:0;font-size:calc(30*var(--u));line-height:calc(36*var(--u));font-weight:700}
 .abt p{margin:calc(34*var(--u)) 0 0;font-size:calc(30*var(--u));line-height:calc(36*var(--u));font-weight:400;white-space:pre-line}
 
@@ -119,9 +119,9 @@ a.ct{left:50%;right:auto;width:max-content;transform:translateX(-50%)}
 
 /* telefoni e schermi verticali: stessa struttura, impaginata in colonna */
 @media (max-aspect-ratio:1/1),(max-width:760px){
+  html{scroll-snap-type:none}
   .home,.site,.sec{display:block;min-height:0}
-  .sec:not(.on){display:none}
-  .fixlayer{position:absolute;inset:0 0 auto 0;height:70px;display:block}
+  .fixlayer{position:fixed;inset:0 0 auto 0;height:62px;display:block;background:#000}
   .fixlayer .board{width:100%;height:100%;min-height:0;display:block}
   .board{width:100%;height:auto;min-height:100vh;min-height:100dvh;display:flex;flex-direction:column}
   .page{position:static;inset:auto;display:flex;flex-direction:column;align-items:center;flex:1}
@@ -163,9 +163,9 @@ a.ct{left:50%;right:auto;width:max-content;transform:translateX(-50%)}
   .num[aria-current="true"]{font-size:34px}
   .none{position:static;margin-top:40px;font-size:15px}
   #pAbout{padding:84px 24px 40px;justify-content:center}
-  .por{position:relative;left:auto;top:auto;width:min(62vw,300px);height:auto;aspect-ratio:388/390;margin:20px 0 30px}
-  .por img{width:119%}
-  .abt{position:static;width:auto;text-align:center}
+  .por{position:relative;left:auto;top:auto;width:min(70vw,320px);height:auto;aspect-ratio:1;margin:20px auto 30px}
+  .por img{position:static;width:100%;height:auto;display:block}
+  .abt{position:static;width:auto;height:auto;display:block;text-align:center}
   .abt h2{font-size:18px;line-height:24px}
   .abt p{margin-top:14px;font-size:17px;line-height:1.45}
   #pContacts{padding:84px 24px 40px;justify-content:center}
