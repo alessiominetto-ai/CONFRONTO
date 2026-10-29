@@ -143,7 +143,24 @@ $('.track',pWork).addEventListener('click',function(){setMode(!split);});
 $$('.lbl',pWork).forEach(function(b){b.addEventListener('click',function(){setMode(b.getAttribute('data-m')==='split');});});
 
 /* ---------- immagini ---------- */
-function setImg(el,src){if(src)el.src=src;else el.removeAttribute('src');}
+function cands(src){
+  if(!src||/^data:/.test(src))return [src];
+  var base=src.split('/').pop();
+  return src.indexOf('/')<0?[src,'immagini/'+base]:[src,base];
+}
+function setImg(el,src){
+  el.onerror=null;
+  if(!src){el.removeAttribute('src');return;}
+  var list=cands(src),i=0;
+  el.onerror=function(){i++;if(i<list.length)el.src=list[i];else el.onerror=null;};
+  el.src=list[0];
+}
+function probe(src,cb){
+  var l=cands(src),i=0,im=new Image();
+  im.onload=function(){cb(true);};
+  im.onerror=function(){i++;if(i<l.length)im.src=l[i];else cb(false);};
+  im.src=l[0];
+}
 function show(){
   var v=vis();if(cur>=v.length)cur=Math.max(0,v.length-1);
   var it=v[cur];
@@ -227,7 +244,7 @@ nums.addEventListener('pointercancel',endDrag);
 /* ---------- chi sono e contatti ---------- */
 function renderAbout(){
   $('#abName').textContent=profile.name;$('#abText').textContent=profile.text;
-  var im=$('#abImg');if(profile.photo)im.src=profile.photo;else im.removeAttribute('src');im.alt=profile.name;
+  var im=$('#abImg');setImg(im,profile.photo);im.alt=profile.name;
 }
 function renderContacts(){
   var m=$('#ctMail'),t=$('#ctTel');
@@ -307,7 +324,7 @@ var PUB='<div class="row"><button class="btn primary pub" type="button" disabled
 function updateStudio(){
   if(!studio)return;
   var on=ed(),mb=mobile();
-  $('#stProj').hidden=!(on&&page!=='home'&&(!mb||page==='work'));$('#stProf').hidden=!(on&&page!=='home'&&(!mb||page==='about'));$('#stCont').hidden=!(on&&page!=='home'&&(!mb||page==='contacts'));
+  $('#stProj').hidden=!(on&&page!=='home'&&(!mb||page==='work'));$('#stProf').hidden=!(on&&page!=='home'&&(!mb||page==='about'));$('#stCont').hidden=!(on&&page!=='home'&&(!mb||page==='contacts'));$('#stPub').hidden=!(on&&page!=='home');
   var it=vis()[cur];
   $('#upA').textContent=(it&&it.before?'Sostituisci':'Carica')+' stato di fatto';
   $('#upB').textContent=(it&&it.after?'Sostituisci':'Carica')+' stato di progetto';
@@ -324,25 +341,26 @@ function updateStudio(){
 }
 function buildStudio(){
   studio=true;
-  var AFTER={stProj:'sWork',stProf:'sAbout',stCont:'sContacts'};
-  function sec(id,html){var s=document.createElement('section');s.className='studio';s.id=id;s.hidden=true;s.innerHTML=html;$('#'+AFTER[id]).insertAdjacentElement('afterend',s);return s;}
+  var AFTER={stProj:'sWork',stProf:'sAbout',stCont:'sContacts',stPub:'#end'};
+  function sec(id,html){var s=document.createElement('section');s.className='studio';s.id=id;s.hidden=true;s.innerHTML=html;if(AFTER[id]==='#end')$('#site').appendChild(s);else $('#'+AFTER[id]).insertAdjacentElement('afterend',s);return s;}
   sec('stProj','<p class="hint">Area sviluppatore: immagini. Per cambiare l’ordine trascina i numeri (da tastiera: Maiusc con le frecce). Le modifiche restano su questo dispositivo finché non scarichi l’aggiornamento e lo carichi su GitHub.</p>'+
     '<input class="field" id="ttl" maxlength="60" placeholder="Titolo" aria-label="Titolo">'+
     '<textarea class="field" id="abs" rows="2" maxlength="200" placeholder="Breve descrizione (compare sotto le immagini)" aria-label="Descrizione"></textarea>'+
     '<p class="hint" id="lnk"></p>'+
     '<div class="row"><button class="btn" id="upA" type="button"></button><button class="btn" id="upB" type="button"></button></div>'+
-    '<div class="row"><button class="btn" id="add" type="button">Nuovo confronto</button><button class="btn" id="del" type="button">Elimina questo confronto</button></div>'+PUB+
+    '<div class="row"><button class="btn" id="add" type="button">Nuovo confronto</button><button class="btn" id="del" type="button">Elimina questo confronto</button></div>'+
     '<input type="file" id="file" accept="image/*" hidden>');
   sec('stProf','<p class="hint">Area sviluppatore: pagina «Chi sono». Le modifiche restano su questo dispositivo finché non scarichi l’aggiornamento.</p>'+
     '<input class="field" id="pn" maxlength="60" placeholder="Nome" aria-label="Nome">'+
     '<textarea class="field" id="pt" rows="4" maxlength="300" placeholder="Descrizione (una riga per ogni a capo)" aria-label="Descrizione della persona"></textarea>'+
-    '<div class="row"><button class="btn" id="pPh" type="button">Sostituisci la foto</button></div>'+PUB+
+    '<div class="row"><button class="btn" id="pPh" type="button">Sostituisci la foto</button></div>'+
     '<input type="file" id="fileP" accept="image/*" hidden>');
   sec('stCont','<p class="hint">Area sviluppatore: pagina «Contatti». Il campo «Altre informazioni» è facoltativo e compare in piccolo sotto la partita IVA.</p>'+
     '<input class="field" id="cm" maxlength="80" placeholder="Email" aria-label="Email">'+
     '<input class="field" id="cp" maxlength="30" placeholder="Telefono" aria-label="Telefono">'+
     '<input class="field" id="cv" maxlength="30" placeholder="Partita IVA" aria-label="Partita IVA">'+
-    '<textarea class="field" id="cx" rows="3" maxlength="300" placeholder="Altre informazioni (indirizzo, C.F., Ordine…)" aria-label="Altre informazioni"></textarea>'+PUB);
+    '<textarea class="field" id="cx" rows="3" maxlength="300" placeholder="Altre informazioni (indirizzo, C.F., Ordine…)" aria-label="Altre informazioni"></textarea>');
+  sec('stPub','<p class="hint">Quando hai finito, scarica l’aggiornamento: verranno scaricati <b>data.js</b> e le eventuali immagini nuove. Caricali tutti su GitHub nella cartella principale del sito, sostituendo <b>data.js</b>.</p><p class="hint miss" id="miss" hidden></p>'+PUB);
   var target=null,file=$('#file');
   $('#upA').onclick=function(){target='before';file.click();};
   $('#upB').onclick=function(){target='after';file.click();};
@@ -386,6 +404,18 @@ function buildBar(){
   $('#goEdit',bar).onclick=function(){var s=$('#'+({work:'stProj',about:'stProf',contacts:'stCont'}[page]||'stProj'));if(s&&!s.hidden)s.scrollIntoView({behavior:reduce?'auto':'smooth',block:'start'});};
   apply();
 }
+function showMiss(m){
+  var e=document.getElementById('miss');if(!e)return;
+  e.textContent=m.length?'Attenzione: queste immagini non risultano online: '+m.join(', ')+'. Caricale su GitHub nella cartella principale o nella cartella «immagini».':'';
+  e.hidden=!m.length;
+}
+function checkImages(){
+  var srcs=[];
+  items.forEach(function(it){[it.before,it.after].forEach(function(x){if(x&&!/^data:/.test(x))srcs.push(x);});});
+  if(profile.photo&&!/^data:/.test(profile.photo))srcs.push(profile.photo);
+  var n=srcs.length,miss=[];if(!n){showMiss([]);return;}
+  srcs.forEach(function(x){probe(x,function(ok){if(!ok)miss.push(x.split('/').pop());if(--n===0)showMiss(miss);});});
+}
 function dataToU8(u){var b=atob(u.split(',')[1]),a=new Uint8Array(b.length),i;for(i=0;i<b.length;i++)a[i]=b.charCodeAt(i);return a;}
 function publish(){
   if(busy)return;
@@ -406,18 +436,18 @@ function publish(){
     },i*500);
   });
   dirty=false;
-  say('Sto scaricando '+files.length+' file: se il browser lo chiede, consenti i download multipli. Poi caricali tutti insieme nella cartella principale del repository su GitHub.');
+  say('Sto scaricando '+files.length+' file ('+files.map(function(f){return f.name;}).join(', ')+'). Se il browser lo chiede, consenti i download multipli e controlla che siano arrivati tutti. Poi caricali nella cartella principale del sito.');
   updateStudio();
 }
 
 /* ---------- avvio ---------- */
 function start(){
   renderAbout();renderContacts();
-  if(ADMIN){buildStudio();buildBar();}
+  if(ADMIN){buildStudio();buildBar();checkImages();}
   setPos(50);
   route();
   if(page!=='work')show();
-  var pre=function(){setTimeout(function(){items.forEach(function(it){[it.before,it.after,profile.photo].forEach(function(s){if(s&&!/^data:/.test(s)){var im=new Image();im.src=s;}});});},400);};
+  var pre=function(){setTimeout(function(){items.forEach(function(it){[it.before,it.after,profile.photo].forEach(function(s){if(s&&!/^data:/.test(s))probe(s,function(){});});});},400);};
   if(document.readyState==='complete')pre();else window.addEventListener('load',pre);
 }
 if(ADMIN){
