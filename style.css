@@ -21,7 +21,7 @@ html{scroll-snap-type:y proximity}
 
 /* parole di navigazione: il passaggio del mouse le rende extrabold e fa comparire la linea */
 .lk{position:absolute;display:block;font-size:calc(29.5*var(--u));line-height:calc(30*var(--u));height:calc(30*var(--u));font-weight:400;text-transform:uppercase;white-space:nowrap}
-.lk::after{content:"";position:absolute;left:0;right:0;top:calc(35*var(--u));height:max(1px,calc(1.4*var(--u)));background:#fff;transform:scaleX(0);transform-origin:left center;transition:transform .4s var(--ease)}
+.lk::after{content:"";position:absolute;left:0;right:0;top:calc(35*var(--u));height:max(1px,calc(1.4*var(--u)));background:currentColor;transform:scaleX(0);transform-origin:left center;transition:transform .4s var(--ease)}
 .lk:hover,.lk:focus-visible{font-weight:800}
 .lk:hover::after,.lk:focus-visible::after,.lk[aria-current]::after{transform:scaleX(1)}
 .lk[aria-current]{font-weight:700}
@@ -61,8 +61,8 @@ html{scroll-snap-type:y proximity}
 .pane img:not([src]){visibility:hidden}
 .pane.after{clip-path:inset(0 0 0 var(--pos,50%))}
 #pWork.split .pane.after{clip-path:inset(0)}
-.pane.after::before{content:"";position:absolute;z-index:1;top:0;bottom:0;left:var(--pos,50%);width:max(1.5px,calc(2*var(--u)));background:#000;pointer-events:none}
-#pWork.split .pane.after::before{opacity:0}
+.pane.after::before{content:"";position:absolute;z-index:1;top:0;bottom:0;left:var(--pos,50%);width:max(1.5px,calc(2*var(--u)));background:#000;pointer-events:none;opacity:1;transition:opacity .25s var(--ease) .9s}
+#pWork.split .pane.after::before{opacity:0;transition:none}
 .cap{position:absolute;left:0;right:0;top:calc(741*var(--u));text-align:center;pointer-events:none}
 .cap b{display:block;font-size:calc(30*var(--u));line-height:calc(30*var(--u));font-weight:700;text-transform:uppercase}
 .cap span{display:block;margin-top:calc(4*var(--u));font-size:calc(20*var(--u));line-height:calc(24*var(--u));font-weight:300;overflow-wrap:anywhere}
@@ -181,3 +181,7 @@ a.ct{left:50%;right:auto;width:max-content;transform:translateX(-50%)}
 .stage.hint .veil{opacity:1}
 @media (hover:hover) and (pointer:fine){.veil{display:none}}
 @media (max-aspect-ratio:1/1),(max-width:760px){.veil{font-size:clamp(13px,3.7vw,17px)}}
+
+/* home: sfondo sfumato, testi e logo in nero */
+.home{background:#fff4dd url("sfondo-home.jpg") center/cover no-repeat;color:#000}
+@media (max-aspect-ratio:1/1),(max-width:760px){.home{background-image:url("sfondo-home-mobile.jpg")}}
