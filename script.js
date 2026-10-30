@@ -2,9 +2,9 @@
 'use strict';
 var ADMIN=!!window.ADMIN,DATA=window.CONFRONTI||{};
 var items=(DATA.items||[]).map(function(x){return Object.assign({},x);});
-var DEF={name:'Alessio Minetto',text:'Ingegnere Edile-Architetto,\nlibero professionista,\nesperto in rappresentazione architettonica.',photo:'immagini/ritratto.jpg',email:'alessio.minetto@gmail.com',phone:'3475552247',piva:'02600730069',extra:''};
+var DEF={name:'Alessio Minetto',text:'Ingegnere Edile-Architetto,\nlibero professionista,\nesperto in rappresentazione architettonica.',photo:'immagini/ritratto.jpg',homeTitle:'Alessio Minetto',homeSub:'Fotoinserimenti architettonici fotorealistici\nper professionisti, imprese e privati',email:'alessio.minetto@gmail.com',phone:'3475552247',piva:'02600730069',extra:''};
 var profile=Object.assign({},DEF,DATA.profile||{});
-function sig(){return items.map(function(i){return i.id+':'+(i.before||'').length+':'+(i.after||'').length+':'+(i.abstract||'').length+':'+(i.title||'');}).join('|')+'#'+['name','text','photo','email','phone','piva','extra'].map(function(k){return (profile[k]||'').length;}).join(',');}
+function sig(){return items.map(function(i){return i.id+':'+(i.before||'').length+':'+(i.after||'').length+':'+(i.abstract||'').length+':'+(i.title||'');}).join('|')+'#'+['name','text','photo','homeTitle','homeSub','email','phone','piva','extra'].map(function(k){return (profile[k]||'').length;}).join(',');}
 var BASE=sig();
 var LOGO='<svg viewBox="867.5 249.5 185.5 199.5" role="img" aria-label="Alessio Minetto"><path fill="currentColor" d="M 899.609375 420.089844 C 857.878906 420.089844 911.523438 258.539062 938.855469 387.671875 L 940.9375 397.46875 C 929.433594 411.738281 915.550781 420.089844 899.609375 420.089844 M 1010.015625 250.148438 L 979.101562 250.148438 C 979.101562 291.4375 972.632812 331.140625 960.699219 361.78125 L 937.054688 250.148438 L 909.742188 250.148438 C 909.742188 250.148438 827.1875 448.710938 894.09375 448.710938 C 914.265625 448.710938 931.550781 437.4375 945.539062 419.214844 L 951.792969 448.710938 L 979.101562 448.710938 L 965.410156 384.03125 C 977.574219 355.097656 984.847656 319.792969 986.542969 285.285156 L 1021.148438 448.710938 L 1052.0625 448.710938 Z M 1010.015625 250.148438"/></svg>';
 var reduce=!!(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches);
@@ -15,7 +15,7 @@ var NAV=[['#immagini','work','Immagini',63],['#chi-sono','about','Chi sono',525]
 function navHTML(cls){return NAV.map(function(n,i){return '<a class="lk'+(cls?' '+cls[i]:'')+'" href="'+n[0]+'" data-r="'+n[1]+'" style="--t:'+n[3]+'">'+n[2]+'</a>';}).join('');}
 var SW='<div class="sw" role="group" aria-label="Modalità di visualizzazione"><button class="lbl" data-m="split" type="button" aria-pressed="true">Affiancate</button><button class="track" role="switch" aria-checked="false" aria-label="Sovrappone le immagini" type="button"></button><button class="lbl" data-m="over" type="button" aria-pressed="false">Sovrapposte</button></div>';
 app.innerHTML=
-'<div class="home" id="home"><div class="board"><div class="page" id="pHome" data-r="home"><div class="blogo">'+LOGO+'</div><h1 class="big">Foto<em>inserimenti</em></h1><hr class="hline">'+
+'<div class="home" id="home"><div class="board"><div class="page" id="pHome" data-r="home"><div class="blogo">'+LOGO+'</div><h1 class="big" id="hTitle"></h1><p class="sub" id="hSub"></p>'+
 '<nav class="hl" aria-label="Sezioni">'+navHTML(['l','c','r'])+'</nav></div></div></div>'+
 '<div class="site" id="site" data-active="work" hidden>'+
 '<div class="fixlayer"><div class="board"><a class="slogo" href="#" aria-label="Home">'+LOGO+'</a><nav class="vnav" aria-label="Principale">'+navHTML()+'</nav></div></div>'+
@@ -290,6 +290,7 @@ function renderAbout(){
   $('#abName').textContent=profile.name;$('#abText').textContent=profile.text;
   var im=$('#abImg');setImg(im,profile.photo);im.alt=profile.name;
 }
+function renderHome(){$('#hTitle').textContent=profile.homeTitle||'';$('#hSub').textContent=profile.homeSub||'';}
 function renderContacts(){
   var m=$('#ctMail'),t=$('#ctTel');
   m.textContent=profile.email;m.href='mailto:'+profile.email;m.hidden=!profile.email;
@@ -367,7 +368,7 @@ var PUB='<div class="row"><button class="btn primary pub" type="button" disabled
 function updateStudio(){
   if(!studio)return;
   var on=ed();
-  $('#stProj').hidden=!(on&&page!=='home');$('#stProf').hidden=!(on&&page!=='home');$('#stCont').hidden=!(on&&page!=='home');$('#stPub').hidden=!(on&&page!=='home');
+  $('#stHome').hidden=!(on&&page==='home');$('#stProj').hidden=!(on&&page!=='home');$('#stProf').hidden=!(on&&page!=='home');$('#stCont').hidden=!(on&&page!=='home');$('#stPub').hidden=!on;
   var it=vis()[cur];
   $('#upA').textContent=(it&&it.before?'Sostituisci':'Carica')+' stato di fatto';
   $('#upB').textContent=(it&&it.after?'Sostituisci':'Carica')+' stato di progetto';
@@ -377,15 +378,18 @@ function updateStudio(){
     if(document.activeElement!==$('#abs'))$('#abs').value=it.abstract||'';
   }
   $('#lnk').textContent=it?'Link di questa immagine: '+location.href.split('#')[0].replace(/admin\.html.*$/,'')+'#immagini/'+(cur+1):'';
-  [['pn','name'],['pt','text'],['cm','email'],['cp','phone'],['cv','piva'],['cx','extra']].forEach(function(k){var f=$('#'+k[0]);if(document.activeElement!==f)f.value=profile[k[1]]||'';});
+  [['hn','homeTitle'],['hs','homeSub'],['pn','name'],['pt','text'],['cm','email'],['cp','phone'],['cv','piva'],['cx','extra']].forEach(function(k){var f=$('#'+k[0]);if(document.activeElement!==f)f.value=profile[k[1]]||'';});
   $$('.pub').forEach(function(b){b.disabled=!dirty||busy;});
-  var ge=document.getElementById('goEdit');if(ge)ge.hidden=!(on&&page!=='home');
+  var ge=document.getElementById('goEdit');if(ge)ge.hidden=!on;
   if(dirty&&!busy&&!$('.stat').textContent)say('Modifiche non ancora scaricate');
 }
 function buildStudio(){
   studio=true;
-  var AFTER={stProj:'sWork',stProf:'sAbout',stCont:'sContacts',stPub:'#end'};
-  function sec(id,html){var s=document.createElement('section');s.className='studio';s.id=id;s.hidden=true;s.innerHTML=html;if(AFTER[id]==='#end')$('#site').appendChild(s);else $('#'+AFTER[id]).insertAdjacentElement('afterend',s);return s;}
+  var AFTER={stHome:'#home',stProj:'sWork',stProf:'sAbout',stCont:'sContacts',stPub:'#end'};
+  function sec(id,html){var s=document.createElement('section');s.className='studio';s.id=id;s.hidden=true;s.innerHTML=html;var w=AFTER[id];if(w==='#end')app.appendChild(s);else if(w==='#home')$('#home').insertAdjacentElement('afterend',s);else $('#'+w).insertAdjacentElement('afterend',s);return s;}
+  sec('stHome','<p class="hint">Area sviluppatore: testi della home, sotto il logo. Il titolo è il nome grande; nel sottotitolo vai a capo per andare a riga nuova. In pagina i testi compaiono in maiuscolo.</p>'+
+    '<input class="field" id="hn" maxlength="60" placeholder="Titolo (nome)" aria-label="Titolo della home">'+
+    '<textarea class="field" id="hs" rows="2" maxlength="160" placeholder="Sottotitolo" aria-label="Sottotitolo della home"></textarea>');
   sec('stProj','<p class="hint">Area sviluppatore: immagini. Per cambiare l’ordine trascina i numeri (da tastiera: Maiusc con le frecce). Le modifiche restano su questo dispositivo finché non scarichi l’aggiornamento e lo carichi su GitHub.</p>'+
     '<input class="field" id="ttl" maxlength="60" placeholder="Titolo" aria-label="Titolo">'+
     '<textarea class="field" id="abs" rows="2" maxlength="200" placeholder="Breve descrizione (compare sotto le immagini)" aria-label="Descrizione"></textarea>'+
@@ -423,7 +427,7 @@ function buildStudio(){
     items.splice(items.indexOf(it),1);cur=Math.max(0,cur-1);say('');markDirty();show();
   };
   function bindField(id,key,render){$('#'+id).oninput=function(){profile[key]=this.value;render();markDirty();};}
-  bindField('pn','name',renderAbout);bindField('pt','text',renderAbout);
+  bindField('hn','homeTitle',renderHome);bindField('hs','homeSub',renderHome);bindField('pn','name',renderAbout);bindField('pt','text',renderAbout);
   bindField('cm','email',renderContacts);bindField('cp','phone',renderContacts);bindField('cv','piva',renderContacts);bindField('cx','extra',renderContacts);
   var fileP=$('#fileP');
   $('#pPh').onclick=function(){fileP.click();};
@@ -444,7 +448,7 @@ function buildBar(){
     if(page==='work')show();else{renderNums();updateStudio();}
   }
   $('#barBtn',bar).onclick=function(){preview=!preview;apply();};
-  $('#goEdit',bar).onclick=function(){var s=$('#'+({work:'stProj',about:'stProf',contacts:'stCont'}[page]||'stProj'));if(s&&!s.hidden)s.scrollIntoView({behavior:reduce?'auto':'smooth',block:'start'});};
+  $('#goEdit',bar).onclick=function(){var s=$('#'+({home:'stHome',work:'stProj',about:'stProf',contacts:'stCont'}[page]||'stProj'));if(s&&!s.hidden)s.scrollIntoView({behavior:reduce?'auto':'smooth',block:'start'});};
   apply();
 }
 function showMiss(m){
@@ -467,7 +471,7 @@ function publish(){
   var out=items.map(function(it){
     return {id:it.id,title:it.title||'',ar:it.ar,abstract:it.abstract||'',before:store(it.before,it.id+'-fatto'),after:store(it.after,it.id+'-progetto')};
   });
-  var prof={name:profile.name,text:profile.text,photo:store(profile.photo,'ritratto'),email:profile.email,phone:profile.phone,piva:profile.piva,extra:profile.extra};
+  var prof={name:profile.name,text:profile.text,photo:store(profile.photo,'ritratto'),homeTitle:profile.homeTitle,homeSub:profile.homeSub,email:profile.email,phone:profile.phone,piva:profile.piva,extra:profile.extra};
   var js='window.CONFRONTI='+JSON.stringify({items:out,profile:prof}).replace(/</g,'\\u003c')+';\n';
   files.unshift({name:'data.js',data:new TextEncoder().encode(js)});
   files.forEach(function(f,i){
@@ -485,7 +489,7 @@ function publish(){
 
 /* ---------- avvio ---------- */
 function start(){
-  renderAbout();renderContacts();
+  renderHome();renderAbout();renderContacts();
   if(ADMIN){buildStudio();buildBar();checkImages();}
   setPos(50);
   route();

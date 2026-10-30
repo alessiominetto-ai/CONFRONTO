@@ -34,13 +34,12 @@ html{scroll-snap-type:y proximity}
 [data-active="contacts"] .slogo{display:none}
 
 /* home */
-.big{position:absolute;left:0;right:0;top:calc(523*var(--u));margin:0;text-align:center;font-size:calc(104.5*var(--u));line-height:calc(104.5*var(--u));font-weight:700;text-transform:uppercase;white-space:nowrap}
-.big em{font-style:normal;color:var(--c)}
-.hline{position:absolute;left:calc(484*var(--u));top:calc(777*var(--u));width:calc(954*var(--u));height:max(1px,calc(1*var(--u)));margin:0;border:0;background:#fff}
-.hl .lk{top:calc(808*var(--u))}
-.hl .l{left:calc(484*var(--u))}
+.big{position:absolute;left:0;right:0;top:calc(473*var(--u));margin:0;text-align:center;font-size:calc(106*var(--u));line-height:calc(106*var(--u));font-weight:700;text-transform:uppercase;white-space:nowrap}
+.sub{position:absolute;left:0;right:0;top:calc(584*var(--u));margin:0;text-align:center;font-size:calc(38*var(--u));line-height:calc(49*var(--u));font-weight:400;text-transform:uppercase;white-space:pre-line}
+.hl .lk{top:calc(809*var(--u))}
+.hl .l{left:calc(482*var(--u))}
 .hl .c{left:50%;transform:translateX(-50%)}
-.hl .r{right:calc(483*var(--u))}
+.hl .r{right:calc(482*var(--u))}
 
 /* immagini */
 #pWork{--ar:.64;--pw:min(calc(679*var(--u)),calc(calc(433*var(--u))/var(--ar)));--ph:calc(var(--pw)*var(--ar))}
@@ -132,9 +131,9 @@ a.ct{left:50%;right:auto;width:max-content;transform:translateX(-50%)}
   .vnav .lk{right:auto;top:auto}
   #pHome{justify-content:center;padding:0 28px}
   .blogo{position:static;width:84px;margin:0 auto 26px}
-  .big{position:static;font-size:calc((100vw - 56px)/8.15);line-height:1.1;margin:0 0 22px}
-  .hline{position:static;width:100%}
-  .hl{display:flex;justify-content:space-between;width:100%;margin-top:12px}
+  .big{position:static;font-size:calc((100vw - 56px)/9.3);line-height:1.1;margin:0 0 14px}
+  .sub{position:static;font-size:calc((100vw - 56px)/26.8);line-height:1.4;margin:0 0 46px;text-wrap:balance}
+  .hl{display:flex;justify-content:space-between;width:100%;margin-top:6px}
   .hl .lk{position:relative;top:auto;left:auto;right:auto;transform:none;font-size:clamp(13px,3.6vw,18px)}
   #pWork{padding:78px 20px 36px;--W:calc(100vw - 40px);--g:14px;--pw:var(--W);--ph:calc(var(--pw)*var(--ar))}
   .sw{position:static;display:flex;justify-content:center;gap:12px;height:auto;margin-bottom:22px}
